@@ -14,27 +14,39 @@ collectFilePaths shellPaths = foldShell shellPaths (FoldShell accFilePaths [] pu
 isIndexFile :: FilePath -> Bool
 isIndexFile path = not . null $ match (contains "index.") $ format fp path
 
-replaceInClassComponent :: FilePath -> IO ()
-replaceInClassComponent path = do
-  inplace genericPattern path
-  inplace tslintDisabledPattern path
-    where
-      genericPattern = ends ("Component {" *> pure "Component<any, any> {")
-      tslintDisabledPattern = begins ("export " *> pure "/* tslint:disable */\nexport ")
+isJsxFile :: FilePath -> IO Bool
+isJsxFile path = not . null . (match (contains "React")) <$> readTextFile path
 
-replaceJsExport :: FilePath -> IO ()
-replaceJsExport = inplace jsImportPattern
-  where
-    jsImportPattern = ends (".js';" *> pure "';")
+replace :: FilePath -> IO ()
+replace path = do
+  isJsx <- isJsxFile path
+  inplace (firstRoundPattern isJsx) path
+  inplace secondRoundPattern path
+    where
+      firstRoundPattern isJsx = if isIndexFile path
+        then exportDefaultFromPattern
+        else if isJsx then jsxFilePatterns else tsPatterns
+      secondRoundPattern = jsImportPattern <|> exportDefaultPattern <|> propTypesPattern
+      tsPatterns = tslintDisabledPattern <|> jsImportPattern
+      jsxFilePatterns = tsPatterns <|> genericPattern
+      genericPattern = "Component {" *> pure "Component<any, any> {"
+      exportDefaultPattern = "export default " *> pure "export "
+      tslintDisabledPattern = "export " *> pure "/* tslint:disable */\nexport "
+      jsImportPattern = ends (".js';" *> pure "';")
+      exportDefaultFromPattern = begins ("export { default }" *> pure "export *")
+      -- TODO: propTypes pattern
+      propTypesPattern =
+        (between "static propTypes = {" "};" (plus anyChar)) *> pure ""
 
 rename :: FilePath -> IO ()
 rename path = do
-  mv path newPath
+  isJsx <- isJsxFile path
+  mv path $ newPath isJsx
     where
-      newPath :: FilePath
-      newPath = (dropExtension path) <.> tsExt
-      tsExt :: Text
-      tsExt = if isIndexFile path then "ts" else "tsx"
+      newPath ::Bool -> FilePath
+      newPath isJsx = dropExtension path <.> tsExt isJsx
+      tsExt :: Bool -> Text
+      tsExt isJsx = if isJsx then "tsx" else "ts"
 
 findJsPaths :: IO [FilePath]
 findJsPaths = collectFilePaths $ find (ends "js") "."
@@ -44,8 +56,9 @@ jsPathsFromFile = collectFilePaths $ (fromText . lineToText) <$> input "./paths.
 
 main :: IO [()]
 main = do
-  paths <- jsPathsFromFile
+  cd "Project"
+  paths <- findJsPaths
+  -- paths <- jsPathsFromFile
   
-  traverse replaceInClassComponent $ filter (not . isIndexFile) paths
-  traverse replaceJsExport paths
+  traverse replace paths
   traverse rename paths
