@@ -26,7 +26,7 @@ replace path = do
       firstRoundPattern isJsx = if isIndexFile path
         then exportDefaultFromPattern
         else if isJsx then jsxFilePatterns else tsPatterns
-      secondRoundPattern = jsImportPattern <|> exportDefaultPattern <|> propTypesPattern
+      secondRoundPattern = propTypesPattern <|> exportDefaultPattern
       tsPatterns = tslintDisabledPattern <|> jsImportPattern
       jsxFilePatterns = tsPatterns <|> genericPattern
       genericPattern = "Component {" *> pure "Component<any, any> {"
@@ -34,9 +34,8 @@ replace path = do
       tslintDisabledPattern = "export " *> pure "/* tslint:disable */\nexport "
       jsImportPattern = ends (".js';" *> pure "';")
       exportDefaultFromPattern = begins ("export { default }" *> pure "export *")
-      -- TODO: propTypes pattern
       propTypesPattern =
-        (between "static propTypes = {" "};" (plus anyChar)) *> pure ""
+        (begins "static propTypes = {" *> pure "") <|> (ends "};" *> pure "") <|> (contains "PropTypes" *> pure "")
 
 rename :: FilePath -> IO ()
 rename path = do
@@ -56,7 +55,7 @@ jsPathsFromFile = collectFilePaths $ (fromText . lineToText) <$> input "./paths.
 
 main :: IO [()]
 main = do
-  cd "Project"
+  cd "/Users/dmitry.skurihin/Projects/MonopolyOnline.Frontend/frontend/src/layouts"
   paths <- findJsPaths
   -- paths <- jsPathsFromFile
   
