@@ -1,3 +1,4 @@
-/paths
-.DS_Store
-
+.stack-work/
+haskell-shell.cabal
+*~
+.idea/
