@@ -17,8 +17,10 @@ findJsPaths = collectFilePaths $ find (ends ".js") "."
 findTsPaths :: IO [FilePath]
 findTsPaths = collectFilePaths $ find (ends ".ts" <|> ends ".tsx") "."
 
-jsPathsFromFile :: IO [FilePath]
-jsPathsFromFile = collectFilePaths $ fromText . lineToText <$> input "./paths.txt"
+pathsFromFile :: IO [FilePath]
+pathsFromFile = do
+  content <- filter (/= "\n") . Text.lines <$> readTextFile "./paths.txt"
+  pure $ map fromText content
 
 makeAbsolute :: FilePath -> [FilePath] -> [FilePath]
 makeAbsolute absPath = map (\path -> absPath </> fromText (Text.replace "./" "" ((Text.pack . encodeString) path)))

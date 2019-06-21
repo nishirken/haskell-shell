@@ -12,9 +12,7 @@ replace path = do
   inplace (firstRoundPattern isJsx) path
   inplace (secondRoundPattern isJsx) path
     where
-      firstRoundPattern isJsx = if isIndexFile path
-        then exportDefaultFromPattern
-        else if isJsx then jsxFilePatterns else tsPatterns
+      firstRoundPattern isJsx = if isJsx then jsxFilePatterns else tsPatterns
       secondRoundPattern isJsx = exportDefaultPattern
       tsPatterns = tslintDisabledPattern <|> jsImportPattern
       jsxFilePatterns = tsPatterns <|> genericPattern
@@ -22,4 +20,10 @@ replace path = do
       exportDefaultPattern = begins ("export default " *> pure "export ")
       tslintDisabledPattern = "export " *> pure "/* tslint:disable */\nexport "
       jsImportPattern = ends (".js';" *> pure "';")
-      exportDefaultFromPattern = begins ("export { default }" *> pure "export *")
+
+replaceExportDefaultFrom :: FilePath -> IO ()
+replaceExportDefaultFrom path = do
+  if isIndexFile path then inplace ("export { default }" *> pure "export *") path else pure ()
+
+replaceJsExtensionInImports :: FilePath -> IO ()
+replaceJsExtensionInImports = inplace (".js';" *> pure "';")

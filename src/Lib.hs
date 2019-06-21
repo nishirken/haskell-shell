@@ -3,19 +3,17 @@ module Lib
   ) where
 
 import qualified Turtle
-import CollectPaths (findJsPaths, findTsPaths, makeAbsolute)
+import CollectPaths (findJsPaths, findTsPaths, makeAbsolute, pathsFromFile)
 import ConvertImports (convert)
+import RenameFile (rename)
+import InplacePatterns (replaceJsExtensionInImports)
 import Const
 
 startRefactor :: IO ()
 startRefactor = do
+  paths <- makeAbsolute projectPath <$> pathsFromFile
   Turtle.cd projectPath
-  paths <- makeAbsolute projectPath <$> findJsPaths
-  tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  -- paths <- jsPathsFromFile
-  -- traverse replace paths
-  -- traverse replace tsPaths
-  -- traverse rename paths
---  traverse convert tsPaths
-  traverse convert (paths <> tsPaths)
+  -- jsPaths <- makeAbsolute projectPath <$> findJsPaths
+  -- tsPaths <- makeAbsolute projectPath <$> findTsPaths
+  traverse replaceJsExtensionInImports paths
   pure ()
