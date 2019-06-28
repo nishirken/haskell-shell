@@ -1,4 +1,3 @@
-frontend/package.json
 ./App.js
 ./const/Cargoes/historyEventTypes.js
 ./const/Cargoes/orderStatuses.js

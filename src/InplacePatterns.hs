@@ -5,6 +5,8 @@ module InplacePatterns where
 import Turtle
 import Prelude hiding (FilePath)
 import FileMatchers (isJsxFile, isIndexFile)
+import qualified Data.Text as Text
+import qualified System.IO.Strict as StrictIO
 
 replace :: FilePath -> IO ()
 replace path = do
@@ -27,3 +29,8 @@ replaceExportDefaultFrom path = do
 
 replaceJsExtensionInImports :: FilePath -> IO ()
 replaceJsExtensionInImports = inplace (".js';" *> pure "';")
+
+addTslintDisabled :: FilePath -> IO ()
+addTslintDisabled path = do
+  content <- StrictIO.readFile $ encodeString path
+  writeTextFile path (Text.pack $ "/* tslint:disable */\n" <> content)

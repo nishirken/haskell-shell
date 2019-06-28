@@ -26,3 +26,4 @@ inplacePatternsSpec :: Spec
 inplacePatternsSpec = describe "InplacePatternsSpec" $ do
   it "exportDefault in index files" $ testOnFiles "index.js" "expectIndex.js" replaceExportDefaultFrom
   it "js extension in imports" $ testOnFiles "jsImport.js" "jsImportExpect.js" replaceJsExtensionInImports
+  it "tslintDisable" $ testOnFiles "tslintDisable.tsx" "expectTslintDisable.tsx" addTslintDisabled
