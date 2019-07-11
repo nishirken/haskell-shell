@@ -6,7 +6,7 @@ import qualified Turtle
 import CollectPaths (findJsPaths, findTsPaths, makeAbsolute, pathsFromFile)
 import ConvertImports (convert)
 import RenameFile (rename)
-import InplacePatterns (replaceJsExtensionInImports, addTslintDisabled)
+import InplacePatterns (addComponentGenericsStub)
 import FileMatchers
 import Const
 
@@ -19,5 +19,6 @@ startRefactor = do
   tsPaths <- makeAbsolute projectPath <$> findTsPaths
   Turtle.cd curr
   condPaths <- traverse inPathsFile tsPaths
-  traverse addTslintDisabled $ map fst $ filter (\(_, y) -> y == True) $ zip tsPaths condPaths
+  let onlyChangedTsPaths = map fst $ filter (\(_, y) -> y == True) $ zip tsPaths condPaths
+  traverse addComponentGenericsStub onlyChangedTsPaths
   pure ()
