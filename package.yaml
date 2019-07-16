@@ -25,6 +25,7 @@ dependencies:
 - text
 - strict
 - filepath
+- megaparsec
 
 library:
   source-dirs: src

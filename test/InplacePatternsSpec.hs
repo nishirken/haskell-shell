@@ -28,3 +28,4 @@ inplacePatternsSpec = describe "InplacePatternsSpec" $ do
   it "js extension in imports" $ testOnFiles "jsImport.js" "jsImportExpect.js" replaceJsExtensionInImports
   it "tslintDisable" $ testOnFiles "tslintDisable.tsx" "expectTslintDisable.tsx" addTslintDisabled
   it "genericsStub" $ testOnFiles "genericsStub.tsx" "expectGenericsStub.tsx" addComponentGenericsStub
+  it "singletonExport" $ testOnFiles "singleton.tsx" "expectSingleton.tsx" replaceExportDefaultSingletons

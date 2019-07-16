@@ -7,6 +7,14 @@ import Prelude hiding (FilePath)
 import FileMatchers (isJsxFile, isIndexFile)
 import qualified Data.Text as Text
 import qualified System.IO.Strict as StrictIO
+import Parser.ExportSingletons (exportSingletonsParser)
+import Text.Megaparsec (parse)
+import Data.Either (fromRight)
+
+textLinesFromFile :: FilePath -> IO [Text.Text]
+textLinesFromFile path = do
+  content <- StrictIO.readFile $ encodeString path
+  pure $ (Text.lines . Text.pack) content
 
 replace :: FilePath -> IO ()
 replace path = do
@@ -29,9 +37,14 @@ addTslintDisabled path = do
 
 addComponentGenericsStub :: FilePath -> IO ()
 addComponentGenericsStub filePath = do
-  content <- StrictIO.readFile $ encodeString filePath
-  let lines = Text.lines . Text.pack $ content
+  lines <- textLinesFromFile filePath
   let replacedLines = (map (\line -> if (length (match (has "class" + suffix "Component {") line) == 2)
       then (Text.replace "Component {" "Component<any> {" line)
       else line) lines)
   writeTextFile filePath (Text.unlines replacedLines)
+
+replaceExportDefaultSingletons :: FilePath -> IO ()
+replaceExportDefaultSingletons path = do
+  lines <- textLinesFromFile path
+  let replacedLines = map (\line -> fromRight line $ parse exportSingletonsParser "" line) lines
+  writeTextFile path (Text.unlines replacedLines)
