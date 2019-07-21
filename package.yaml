@@ -26,6 +26,7 @@ dependencies:
 - strict
 - filepath
 - megaparsec
+- raw-strings-qq
 
 library:
   source-dirs: src

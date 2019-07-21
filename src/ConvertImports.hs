@@ -11,8 +11,7 @@ import Const (projectPath)
 import Data.Foldable (traverse_)
 import InplacePatterns (textLinesFromFile)
 import Text.Megaparsec (parse)
-import Parser.DefaultImportStatement (DefaultImportStatement (..))
-import Parser.ImportStatement (defaultImportParser)
+import Parser.Statement (Statement (..))
 import Data.Either (isRight)
 
 data PreparedPath = PreparedPath
@@ -57,7 +56,5 @@ convert filePath = do
 replaceDefaultImportStatement :: Turtle.FilePath -> IO ()
 replaceDefaultImportStatement filePath = do
   lines <- textLinesFromFile filePath
-  
-    where
-      defaultImports = filter isRight $ map (parse importDefaultParser "") lines
+  pure ()
   
