@@ -6,6 +6,7 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import Data.Text (Text, pack)
 import Parser.Common (Parser)
+import Data.Maybe (isJust)
 
 data Definition =
   Definition
@@ -14,6 +15,14 @@ data Definition =
     , _isDefault :: Bool
     }
   | Star { _alias :: Maybe Text }
+  deriving (Eq, Show)
+
+data ExportDefinition
+  = Class (Maybe Text)
+  | ObjectCreation Text
+  | Lambda
+  | Function Text
+  | Const Text
   deriving (Eq, Show)
 
 data Statement
@@ -25,6 +34,7 @@ data Statement
     { _definitions :: [Definition]
     , _path :: Text
     }
+  | Export ExportDefinition Bool
   deriving (Eq, Show)
 
 aliasParser :: Parser Text
@@ -99,5 +109,62 @@ exportFromParser = do
   string "export"
   (\(definitions, path) -> ExportFrom definitions path) <$> baseStatementParser
 
+exportClassParser :: Parser ExportDefinition
+exportClassParser = do
+  string "class"
+  space
+  name <- optional $ try $ some letterChar
+  pure $ Class (pack <$> name)
+
+exportObjectCreationParser :: Parser ExportDefinition
+exportObjectCreationParser = do
+  string "new"
+  space
+  name <- some letterChar
+  pure $ ObjectCreation (pack name)
+
+exportFunctionParser :: Parser ExportDefinition
+exportFunctionParser = do
+  string "function"
+  space
+  name <- some letterChar
+  pure $ Function (pack name)
+
+exportConstParser :: Parser ExportDefinition
+exportConstParser = do
+  string "const"
+  space
+  name <- some letterChar
+  pure $ Const (pack name)
+
+exportLambdaParser :: Parser ExportDefinition
+exportLambdaParser = do
+  char '('
+  optional $ try (char '{') <|> char '['
+  skipMany $ try spaceChar <|> try (char ',') <|> alphaNumChar
+  optional $ try (char '}') <|> char ']'
+  char ')'
+  space
+  string "=>"
+  pure Lambda
+
+exportDefinitionParser :: Parser ExportDefinition
+exportDefinitionParser =
+  try exportClassParser
+  <|> try exportObjectCreationParser
+  <|> try exportFunctionParser
+  <|> try exportConstParser
+  <|> exportLambdaParser
+
+exportParser :: Parser Statement
+exportParser = do
+  space
+  string "export"
+  space
+  isDefault <- optional $ try (string "default")
+  space
+  definition <- exportDefinitionParser
+  pure $ Export definition (isJust isDefault)
+
 statementParser :: Parser Statement
-statementParser = try importParser <|> exportFromParser
+statementParser = try importParser <|> try exportFromParser <|> exportParser

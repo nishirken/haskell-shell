@@ -170,3 +170,45 @@ parserSpec = describe "Parser" $ do
           ]
           "folder/file"
       parse statementParser "" testStr `shouldParse` expect
+  context "Export" $ do
+    it "export const" $ do
+      let
+        testStr = "export const Url = 'http://google.com';"
+        expect = Export (Const "Url") False
+      parse statementParser "" testStr `shouldParse` expect
+    it "export class" $ do
+      let
+        testStr = [r|export class Url {
+          field1: string;
+          field2: number;
+        }|]
+        expect = Export (Class (Just "Url")) False
+      parse statementParser "" testStr `shouldParse` expect
+    it "export function" $ do
+      let
+        testStr = "export function f() {}"
+        expect = Export (Function "f") False
+      parse statementParser "" testStr `shouldParse` expect
+    it "export default new class" $ do
+      let
+        testStr = "export default new SomeClass();"
+        expect = Export (ObjectCreation "SomeClass") True
+      parse statementParser "" testStr `shouldParse` expect
+    it "export default class" $ do
+      let
+        testStr = "export default class SomeClass {}"
+        expect = Export (Class (Just "SomeClass")) True
+      parse statementParser "" testStr `shouldParse` expect
+    it "export default anonimous class" $ do
+      let
+        testStr = "export default class {}"
+        expect = Export (Class Nothing) True
+      parse statementParser "" testStr `shouldParse` expect
+    it "export default lambda" $ do
+      let
+        testStr = [r|export default () => ({
+          field: 1,
+          field: 2,
+        })|]
+        expect = Export Lambda True
+      parse statementParser "" testStr `shouldParse` expect
