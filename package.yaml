@@ -27,6 +27,7 @@ dependencies:
 - filepath
 - megaparsec
 - raw-strings-qq
+- hspec-megaparsec
 
 library:
   source-dirs: src

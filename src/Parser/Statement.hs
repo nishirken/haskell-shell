@@ -16,8 +16,8 @@ data Definition =
   | Star { _alias :: Maybe Text }
   deriving (Eq, Show)
 
-data Statement =
-  Import
+data Statement
+  = Import
     { _definitions :: [Definition]
     , _path :: Text
     }
@@ -48,13 +48,15 @@ makeDefinition name alias isDefault =
 singleDefinitionParser :: Parser Definition
 singleDefinitionParser = do
   space
+  skipMany newline
   (name, alias) <- aliasAndNameParser
   optional $ char ','
+  skipMany newline
   space
   pure $ makeDefinition name alias $ name == "default"
 
 normalDefinitionsParser :: Parser [Definition]
-normalDefinitionsParser = char '{' *> some singleDefinitionParser <* char '}'
+normalDefinitionsParser = between (char '{') (char '}') (some singleDefinitionParser)
 
 defaultDefinitionParser :: Parser [Definition]
 defaultDefinitionParser = do
@@ -78,15 +80,24 @@ combo = do
   normalDefinitions <- normalDefinitionsParser
   pure $ defaultDefinitions <> normalDefinitions
 
-importParser :: Parser Statement
-importParser = do
-  string "import"
+baseStatementParser :: Parser ([Definition], Text)
+baseStatementParser = do
   space
-  definitions <- try normalDefinitionsParser <|> try defaultDefinitionParser <|> combo
+  definitions <- try combo <|> try normalDefinitionsParser <|> defaultDefinitionParser
   space
   string "from"
   path <- pathParser
-  pure $ Import definitions path
+  pure (definitions, path)
+
+importParser :: Parser Statement
+importParser = do
+  string "import"
+  (\(definitions, path) -> Import definitions path) <$> baseStatementParser
+
+exportFromParser :: Parser Statement
+exportFromParser = do
+  string "export"
+  (\(definitions, path) -> ExportFrom definitions path) <$> baseStatementParser
 
 statementParser :: Parser Statement
-statementParser = importParser
+statementParser = try importParser <|> exportFromParser
