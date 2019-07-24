@@ -29,3 +29,4 @@ inplacePatternsSpec = describe "InplacePatternsSpec" $ do
   it "tslintDisable" $ testOnFiles "tslintDisable.tsx" "expectTslintDisable.tsx" addTslintDisabled
   it "genericsStub" $ testOnFiles "genericsStub.tsx" "expectGenericsStub.tsx" addComponentGenericsStub
   it "singletonExport" $ testOnFiles "singleton.tsx" "expectSingleton.tsx" replaceExportDefaultSingletons
+  it "default imports" $ testOnFiles "paths/component.tsx" "paths/expectComponent.tsx" replaceDefaultImports

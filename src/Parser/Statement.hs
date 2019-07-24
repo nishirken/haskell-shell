@@ -15,6 +15,7 @@ data Definition =
     , _isDefault :: Bool
     }
   | Star { _alias :: Maybe Text }
+  | Anonimous
   deriving (Eq, Show)
 
 data ExportDefinition
@@ -99,6 +100,13 @@ baseStatementParser = do
   path <- pathParser
   pure (definitions, path)
 
+anonimousImportParser :: Parser Statement
+anonimousImportParser = do
+  skipMany $ try newline <|> spaceChar
+  string "import"
+  path <- pathParser
+  pure $ Import [Anonimous] path
+
 importParser :: Parser Statement
 importParser = do
   skipMany $ try newline <|> spaceChar
@@ -115,44 +123,64 @@ exportClassParser :: Parser ExportDefinition
 exportClassParser = do
   string "class"
   space
-  name <- optional $ try $ some letterChar
+  name <- optional $ try $ some alphaNumChar
+  skipManyTill (try printChar <|> newline) (char '}')
   pure $ Class (pack <$> name)
+
+applicationParser :: Parser ()
+applicationParser = do
+  char '('
+  skipManyTill (try printChar <|> newline) (char ')')
+  pure ()
 
 exportObjectCreationParser :: Parser ExportDefinition
 exportObjectCreationParser = do
   string "new"
   space
-  name <- some letterChar
-  char '('
-  optional $ try (char '{') <|> char '['
-  skipMany $ try spaceChar <|> try (char ',') <|> alphaNumChar
-  optional $ try (char '}') <|> char ']'
-  string ");"
+  name <- some alphaNumChar
+  applicationParser
+  optional . try $ char ';'
   pure $ ObjectCreation (pack name)
+
+functionBodyParser :: Parser ()
+functionBodyParser = do
+  char '{'
+  skipManyTill (try printChar <|> newline) (char '}')
+  pure ()
+
+typeParser :: Parser ()
+typeParser = do
+  try spaceChar <|> try (char ':') <|> try alphaNumChar <|> try (char '<') <|> try (char '>')
+  pure ()
 
 exportFunctionParser :: Parser ExportDefinition
 exportFunctionParser = do
   string "function"
   space
-  name <- some letterChar
+  name <- some alphaNumChar
+  space
+  applicationParser
+  skipMany typeParser
+  functionBodyParser
   pure $ Function (pack name)
 
 exportConstParser :: Parser ExportDefinition
 exportConstParser = do
   string "const"
   space
-  name <- some letterChar
+  name <- some alphaNumChar
+  skipManyTill printChar (char '=')
+  skipManyTill (try printChar <|> newline) (char ';')
   pure $ Const (pack name)
 
 exportLambdaParser :: Parser ExportDefinition
 exportLambdaParser = do
-  char '('
-  optional $ try (char '{') <|> char '['
-  skipMany $ try spaceChar <|> try (char ',') <|> alphaNumChar
-  optional $ try (char '}') <|> char ']'
-  char ')'
-  space
+  applicationParser
+  skipMany typeParser
   string "=>"
+  space
+  try applicationParser <|> functionBodyParser
+  optional . try $ char ';'
   pure Lambda
 
 exportDefinitionParser :: Parser ExportDefinition
@@ -175,7 +203,6 @@ exportParser = do
 
 statementParser :: Parser [Statement]
 statementParser = do
-  imports <- some $ try importParser
-  exports <- some $ try exportParser
-  -- exportsFrom <- some $ try exportFromParser
+  imports <- some $ try importParser <|> try anonimousImportParser
+  exports <- some $ try exportParser <|> try exportFromParser
   pure $ imports <> exports

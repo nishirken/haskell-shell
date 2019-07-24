@@ -9,6 +9,7 @@ import Text.Megaparsec (parse)
 import Parser.ExportSingletons
 import Parser.Statement
 import Text.RawString.QQ (r)
+import Data.Text (pack)
 
 parserSpec :: Spec
 parserSpec = describe "Parser" $ do
@@ -178,7 +179,7 @@ parserSpec = describe "Parser" $ do
       parse exportParser "" testStr `shouldParse` expect
     it "export class" $ do
       let
-        testStr = [r|export class Url {
+        testStr = [r|export class Url<T> {
           field1: string;
           field2: number;
         }|]
@@ -186,7 +187,11 @@ parserSpec = describe "Parser" $ do
       parse exportParser "" testStr `shouldParse` expect
     it "export function" $ do
       let
-        testStr = "export function f() {}"
+        testStr = [r|
+        export function f(x: string): null {
+          return null;
+        }
+        |]
         expect = Export (Function "f") False
       parse exportParser "" testStr `shouldParse` expect
     it "export default new class" $ do
@@ -196,7 +201,7 @@ parserSpec = describe "Parser" $ do
       parse exportParser "" testStr `shouldParse` expect
     it "export default class" $ do
       let
-        testStr = "export default class SomeClass {}"
+        testStr = "export default class SomeClass<T, S> {}"
         expect = Export (Class (Just "SomeClass")) True
       parse exportParser "" testStr `shouldParse` expect
     it "export default anonimous class" $ do
@@ -206,7 +211,7 @@ parserSpec = describe "Parser" $ do
       parse exportParser "" testStr `shouldParse` expect
     it "export default lambda" $ do
       let
-        testStr = [r|export default () => ({
+        testStr = [r|export default (): any => ({
           field: 1,
           field: 2,
         });|]
@@ -223,12 +228,28 @@ parserSpec = describe "Parser" $ do
           default as State,
         } from 'folder/file';
 
+        import 'library';
+
+        export const Url: string = 'http://localhost:3000';
+
         export default new SomeClass({ fields });
+
+        export default class Component {
+
+        }
+
+        export default class {
+
+        }
 
         export default () => ({
           field: 1,
           field: 2,
         });
+
+        export function f(): null {
+          return null;
+        }
 
         export {
           SomeClass,
@@ -252,8 +273,13 @@ parserSpec = describe "Parser" $ do
           , Definition "default" (Just "State") True
           ]
           "folder/file"
-        , Export Lambda True
+        , Import [Anonimous] "library"
+        , Export (Const "Url") False
         , Export (ObjectCreation "SomeClass") True
+        , Export (Class (Just "Component")) True
+        , Export (Class Nothing) True
+        , Export Lambda True
+        , Export (Function "f") False
         , ExportFrom
           [ Definition "SomeClass" Nothing False
           , Definition "AnotherClass" (Just "Another") False
@@ -268,5 +294,33 @@ parserSpec = describe "Parser" $ do
           ]
           "folder/file"
         ]
-    it "length" $ (length <$> (parse statementParser "" testStr)) `shouldBe` (Right $ length expect)
+    it "length" $ (length <$> parse statementParser "" testStr) `shouldBe` (Right $ length expect)
     it "compare parse" $ parse statementParser "" testStr `shouldParse` expect
+  it "from file" $ do
+    content <- pack <$> readFile "./test/testFiles/paths/innerFolder/State.ts"
+    let
+      expect =
+        [ Import [Star (Just "c")] "const"
+        , Import [Anonimous] "services/formBindings"
+        , Import [Definition "Account" Nothing True] "services/Api/Account"
+        , Import
+          [ Definition "observable" Nothing False
+          , Definition "action" Nothing False
+          ]
+          "mobx"
+        , Import [Definition "FormState" Nothing True] "services/FormState"
+        , Import [Definition "ResponseError" Nothing True] "services/Api/ResponseError"
+        , Import
+          [ Definition "required" Nothing False
+          , Definition "validateNewLogin" Nothing False
+          , Definition "isPhone" Nothing False
+          ]
+          "services/validators"
+        , Import [Definition "routeManager" Nothing True] "services/routeManager"
+        , Import [Definition "formatPhoneToServerString" Nothing False] "services/utils"
+        , Export (Const "api") False
+        , Export (Const "api2") False
+        , Export (Const "fields") False
+        , Export (Class (Just "LoginFormState")) True
+        ]
+    parse statementParser "" content `shouldParse` expect

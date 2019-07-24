@@ -8,6 +8,7 @@ import FileMatchers (isJsxFile, isIndexFile)
 import qualified Data.Text as Text
 import qualified System.IO.Strict as StrictIO
 import Parser.ExportSingletons (exportSingletonsParser)
+import Parser.Statement (statementParser, Definition (..), ExportDefinition (..), Statement (..))
 import Text.Megaparsec (parse)
 import Data.Either (fromRight)
 
@@ -48,3 +49,10 @@ replaceExportDefaultSingletons path = do
   lines <- textLinesFromFile path
   let replacedLines = map (\line -> fromRight line $ parse exportSingletonsParser "" line) lines
   writeTextFile path (Text.unlines replacedLines)
+
+replaceDefaultImports :: FilePath -> IO ()
+replaceDefaultImports path = do
+  content <- Text.pack <$> (StrictIO.readFile $ encodeString path)
+  let statements = parse statementParser "" content
+  print statements
+  pure ()
