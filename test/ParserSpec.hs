@@ -28,7 +28,7 @@ parserSpec = describe "Parser" $ do
       let
         testStr = "import { SomeClass } from './RelativeFolder/RelativeFile';"
         expect = Import [Definition "SomeClass" Nothing False] "./RelativeFolder/RelativeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "normal one line, multiple definitions" $ do
       let
         testStr = "import { StateClass, someConst } from 'SomeFolder/SomeFile';"
@@ -37,12 +37,12 @@ parserSpec = describe "Parser" $ do
           , Definition "someConst" Nothing False
           ]
           "SomeFolder/SomeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "one line * with alias" $ do
       let
         testStr = "import * as React from 'react';"
         expect = Import [Star (Just "React")] "react"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "normal one line, multiple definitions with alias" $ do
       let
         testStr = "import { StateClass, AnotherClass as Another, default as State } from 'folder/file';"
@@ -52,22 +52,22 @@ parserSpec = describe "Parser" $ do
           , Definition "default" (Just "State") True
           ]
           "folder/file"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "one line default without alias" $ do
       let
         testStr = "import SomeClass from 'SomeFolder/SomeFile';"
         expect = Import [Definition "SomeClass" Nothing True] "SomeFolder/SomeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "one line default with alias, the first" $ do
       let
         testStr = "import SomeClass as State from './RelativeFolder/RelativeFile';"
         expect = Import [Definition "SomeClass" (Just "State") True] "./RelativeFolder/RelativeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "one line default with alias, the second" $ do
       let
         testStr = "import { default as State } from './RelativeFolder/RelativeFile';"
         expect = Import [Definition "default" (Just "State") True] "./RelativeFolder/RelativeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "normal multiline without aliases" $ do
       let
         testStr = [r|import {
@@ -79,7 +79,7 @@ parserSpec = describe "Parser" $ do
           , Definition "someConst" Nothing False
           ]
           "./SomeFolder/SomeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "normal multiline with aliases" $ do
       let
         testStr = [r|import {
@@ -93,7 +93,7 @@ parserSpec = describe "Parser" $ do
           , Definition "default" (Just "State") True
           ]
           "folder/file"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
     it "combination default and normal" $ do
       let
         testStr = [r|import State as AccessState, {
@@ -108,13 +108,13 @@ parserSpec = describe "Parser" $ do
           , Definition "default" (Just "State") True
           ]
           "folder/file"
-      parse statementParser "" testStr `shouldParse` expect
+      parse importParser "" testStr `shouldParse` expect
   context "Export from" $ do
     it "normal one line, one definition" $ do
       let
         testStr = "export { SomeClass } from './RelativeFolder/RelativeFile';"
         expect = ExportFrom [Definition "SomeClass" Nothing False] "./RelativeFolder/RelativeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportFromParser "" testStr `shouldParse` expect
     it "normal one line, multiple definitions" $ do
       let
         testStr = "export { StateClass, someConst } from 'SomeFolder/SomeFile';"
@@ -123,7 +123,7 @@ parserSpec = describe "Parser" $ do
           , Definition "someConst" Nothing False
           ]
           "SomeFolder/SomeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportFromParser "" testStr `shouldParse` expect
     it "normal one line, multiple definitions with alias" $ do
       let
         testStr = "export { StateClass, AnotherClass as Another, default as State } from 'folder/file';"
@@ -133,17 +133,17 @@ parserSpec = describe "Parser" $ do
           , Definition "default" (Just "State") True
           ]
           "folder/file"
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportFromParser "" testStr `shouldParse` expect
     it "one line * without alias" $ do
       let
         testStr = "export * from 'SomeFolder/SomeFile';"
         expect = ExportFrom [Star Nothing] "SomeFolder/SomeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportFromParser "" testStr `shouldParse` expect
     it "one line default with alias, the first" $ do
       let
         testStr = "export { default as State } from './RelativeFolder/RelativeFile';"
         expect = ExportFrom [Definition "default" (Just "State") True] "./RelativeFolder/RelativeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportFromParser "" testStr `shouldParse` expect
     it "normal multiline without aliases" $ do
       let
         testStr = [r|export {
@@ -155,7 +155,7 @@ parserSpec = describe "Parser" $ do
           , Definition "someConst" Nothing False
           ]
           "./SomeFolder/SomeFile"
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportFromParser "" testStr `shouldParse` expect
     it "normal multiline with aliases" $ do
       let
         testStr = [r|export {
@@ -169,13 +169,13 @@ parserSpec = describe "Parser" $ do
           , Definition "default" (Just "State") True
           ]
           "folder/file"
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportFromParser "" testStr `shouldParse` expect
   context "Export" $ do
     it "export const" $ do
       let
         testStr = "export const Url = 'http://google.com';"
         expect = Export (Const "Url") False
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportParser "" testStr `shouldParse` expect
     it "export class" $ do
       let
         testStr = [r|export class Url {
@@ -183,32 +183,90 @@ parserSpec = describe "Parser" $ do
           field2: number;
         }|]
         expect = Export (Class (Just "Url")) False
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportParser "" testStr `shouldParse` expect
     it "export function" $ do
       let
         testStr = "export function f() {}"
         expect = Export (Function "f") False
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportParser "" testStr `shouldParse` expect
     it "export default new class" $ do
       let
         testStr = "export default new SomeClass();"
         expect = Export (ObjectCreation "SomeClass") True
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportParser "" testStr `shouldParse` expect
     it "export default class" $ do
       let
         testStr = "export default class SomeClass {}"
         expect = Export (Class (Just "SomeClass")) True
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportParser "" testStr `shouldParse` expect
     it "export default anonimous class" $ do
       let
         testStr = "export default class {}"
         expect = Export (Class Nothing) True
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportParser "" testStr `shouldParse` expect
     it "export default lambda" $ do
       let
         testStr = [r|export default () => ({
           field: 1,
           field: 2,
-        })|]
+        });|]
         expect = Export Lambda True
-      parse statementParser "" testStr `shouldParse` expect
+      parse exportParser "" testStr `shouldParse` expect
+    
+  context "context" $ do
+    let
+      testStr = [r|
+        import { StateClass, AnotherClass as Another, default as State } from 'folder/file';
+        import State as AccessState, {
+          SomeClass,
+          AnotherClass as Another,
+          default as State,
+        } from 'folder/file';
+
+        export default new SomeClass({ fields });
+
+        export default () => ({
+          field: 1,
+          field: 2,
+        });
+
+        export {
+          SomeClass,
+          AnotherClass as Another,
+          default as State,
+        } from 'folder/file';
+        export * from 'SomeFolder/SomeFile';
+        export { StateClass, AnotherClass as Another, default as State } from 'folder/file';
+        |]
+      expect =
+        [ Import
+          [ Definition "StateClass" Nothing False
+          , Definition "AnotherClass" (Just "Another") False
+          , Definition "default" (Just "State") True
+          ]
+          "folder/file"
+        , Import
+          [ Definition "State" (Just "AccessState") True
+          , Definition "SomeClass" Nothing False
+          , Definition "AnotherClass" (Just "Another") False
+          , Definition "default" (Just "State") True
+          ]
+          "folder/file"
+        , Export Lambda True
+        , Export (ObjectCreation "SomeClass") True
+        , ExportFrom
+          [ Definition "SomeClass" Nothing False
+          , Definition "AnotherClass" (Just "Another") False
+          , Definition "default" (Just "State") True
+          ]
+          "folder/file"
+        , ExportFrom [Star Nothing] "SomeFolder/SomeFile"
+        , ExportFrom
+          [ Definition "StateClass" Nothing False
+          , Definition "AnotherClass" (Just "Another") False
+          , Definition "default" (Just "State") True
+          ]
+          "folder/file"
+        ]
+    it "length" $ (length <$> (parse statementParser "" testStr)) `shouldBe` (Right $ length expect)
+    it "compare parse" $ parse statementParser "" testStr `shouldParse` expect

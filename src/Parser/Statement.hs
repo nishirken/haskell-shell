@@ -6,7 +6,7 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import Data.Text (Text, pack)
 import Parser.Common (Parser)
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromMaybe)
 
 data Definition =
   Definition
@@ -101,11 +101,13 @@ baseStatementParser = do
 
 importParser :: Parser Statement
 importParser = do
+  skipMany $ try newline <|> spaceChar
   string "import"
   (\(definitions, path) -> Import definitions path) <$> baseStatementParser
 
 exportFromParser :: Parser Statement
 exportFromParser = do
+  skipMany $ try newline <|> spaceChar
   string "export"
   (\(definitions, path) -> ExportFrom definitions path) <$> baseStatementParser
 
@@ -121,6 +123,11 @@ exportObjectCreationParser = do
   string "new"
   space
   name <- some letterChar
+  char '('
+  optional $ try (char '{') <|> char '['
+  skipMany $ try spaceChar <|> try (char ',') <|> alphaNumChar
+  optional $ try (char '}') <|> char ']'
+  string ");"
   pure $ ObjectCreation (pack name)
 
 exportFunctionParser :: Parser ExportDefinition
@@ -158,7 +165,7 @@ exportDefinitionParser =
 
 exportParser :: Parser Statement
 exportParser = do
-  space
+  skipMany $ try newline <|> spaceChar
   string "export"
   space
   isDefault <- optional $ try (string "default")
@@ -166,5 +173,9 @@ exportParser = do
   definition <- exportDefinitionParser
   pure $ Export definition (isJust isDefault)
 
-statementParser :: Parser Statement
-statementParser = try importParser <|> try exportFromParser <|> exportParser
+statementParser :: Parser [Statement]
+statementParser = do
+  imports <- some $ try importParser
+  exports <- some $ try exportParser
+  -- exportsFrom <- some $ try exportFromParser
+  pure $ imports <> exports
