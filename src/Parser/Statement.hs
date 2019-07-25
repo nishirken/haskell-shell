@@ -203,6 +203,5 @@ exportParser = do
 
 statementParser :: Parser [Statement]
 statementParser = do
-  imports <- some $ try importParser <|> try anonimousImportParser
-  exports <- some $ try exportParser <|> try exportFromParser
-  pure $ imports <> exports
+  statements <- some $ try importParser <|> try anonimousImportParser <|> try exportFromParser <|> try exportParser
+  pure statements

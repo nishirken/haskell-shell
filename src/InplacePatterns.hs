@@ -9,7 +9,7 @@ import qualified Data.Text as Text
 import qualified System.IO.Strict as StrictIO
 import Parser.ExportSingletons (exportSingletonsParser)
 import Parser.Statement (statementParser, Definition (..), ExportDefinition (..), Statement (..))
-import Text.Megaparsec (parse)
+import Text.Megaparsec (parse, parseTest)
 import Data.Either (fromRight)
 
 textLinesFromFile :: FilePath -> IO [Text.Text]
@@ -53,6 +53,6 @@ replaceExportDefaultSingletons path = do
 replaceDefaultImports :: FilePath -> IO ()
 replaceDefaultImports path = do
   content <- Text.pack <$> (StrictIO.readFile $ encodeString path)
-  let statements = parse statementParser "" content
+  let statements = parse statementParser (encodeString path) content
   print statements
   pure ()
