@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module InplacePatterns where
 
@@ -11,6 +12,7 @@ import Parser.ExportSingletons (exportSingletonsParser)
 import Parser.Statement (statementParser, Definition (..), ExportDefinition (..), Statement (..))
 import Text.Megaparsec (parse, parseTest)
 import Data.Either (fromRight)
+import Data.Maybe (isJust)
 
 textLinesFromFile :: FilePath -> IO [Text.Text]
 textLinesFromFile path = do
@@ -50,9 +52,34 @@ replaceExportDefaultSingletons path = do
   let replacedLines = map (\line -> fromRight line $ parse exportSingletonsParser "" line) lines
   writeTextFile path (Text.unlines replacedLines)
 
+printAlias :: Maybe Text.Text -> Text.Text
+printAlias (Just alias) = " as " <> alias
+printAlias Nothing = ""
+
+printDefinition :: Definition -> Text.Text
+printDefinition Definition{..} = _name <> printAlias _alias
+printDefinition Star{..} = "*" <> printAlias _alias
+printDefinition Anonimous = ""
+
+printDefinitions :: [Definition] -> Text.Text
+printDefinitions = foldr (\definition acc -> (printDefinition definition) <> ", " <> acc) ""
+
+getDefaultName :: 
+
+printExportDefinition :: ExportDefinition -> Bool -> Text.Text
+printExportDefinition (Class name) isDefault = 
+
+printStatement :: Statement -> Text.Text
+printStatement Import{..} = let isSingleDefault Definition{..} = _isDefault == True 
+  if length _definitions == 1 && (isSingleDefault $ head _definitions) == True
+  then "import " <> printDefinition (head _definitions) <> " "
+  else "import { " <> printDefinitions _definitions <> " } "
+printStatement ExportFrom{..} = "export { " <> printDefinitions _definitions <> " } "
+printStatement (Export definition isDefault) = printExportDefinition definition isDefault
+
 replaceDefaultImports :: FilePath -> IO ()
 replaceDefaultImports path = do
-  content <- Text.pack <$> (StrictIO.readFile $ encodeString path)
+  content <- Text.pack <$> StrictIO.readFile (encodeString path)
   let statements = parse statementParser (encodeString path) content
   print statements
   pure ()
