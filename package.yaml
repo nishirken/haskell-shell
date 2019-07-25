@@ -28,6 +28,8 @@ dependencies:
 - megaparsec
 - raw-strings-qq
 - hspec-megaparsec
+- directory
+- unix
 
 library:
   source-dirs: src
