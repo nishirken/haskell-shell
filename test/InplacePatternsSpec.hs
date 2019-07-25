@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module InplacePatternsSpec where
 
@@ -7,9 +8,11 @@ import qualified Turtle
 import InplacePatterns
 import qualified System.IO.Strict as StrictIO
 import System.Directory (getDirectoryContents)
-import System.FilePath.Posix ((</>))
+import System.FilePath.Posix ((</>), addExtension)
 import System.Posix.Files (getFileStatus)
-import Data.Text (Text, pack)
+import Data.Text (Text, pack, unpack)
+import Data.Maybe (fromJust)
+import Control.Monad (forM_)
 
 basePath :: FilePath
 basePath = "./test/testFiles/"
@@ -28,28 +31,44 @@ testOnFiles testFile expectFile f = do
 data TestFile = TestFile
   { _originalContent :: Text
   , _expectContent :: Text
+  , _path :: String
   } deriving (Show)
 
-expectPath :: FilePath -> FilePath
-expectPath path = (Turtle.encodeString . Turtle.filename . Turtle.fromString) path </> "expect.ts"
+makeTestFile :: FilePath -> FilePath -> IO TestFile
+makeTestFile path expectPath = do
+  originalContent <- pack <$> StrictIO.readFile path
+  expectContent <- pack <$> StrictIO.readFile expectPath
+  pure $ TestFile originalContent expectContent path
 
-makeTestFile :: FilePath -> IO TestFile
-makeTestFile path = do
-  originalContent <- pack <$> readFile path
-  expectContent <- pack <$> readFile (expectPath path)
-  pure $ TestFile originalContent expectContent
+recoverFile :: TestFile -> IO ()
+recoverFile TestFile{..} = writeFile _path $ unpack _originalContent
 
 inplacePatternsSpec :: Spec
-inplacePatternsSpec = describe "InplacePatternsSpec" $ do
+inplacePatternsSpec = describe "InplacePatterns" $ do
   it "exportDefault in index files" $ testOnFiles "index.js" "expectIndex.js" replaceExportDefaultFrom
   it "js extension in imports" $ testOnFiles "jsImport.js" "jsImportExpect.js" replaceJsExtensionInImports
   it "tslintDisable" $ testOnFiles "tslintDisable.tsx" "expectTslintDisable.tsx" addTslintDisabled
   it "genericsStub" $ testOnFiles "genericsStub.tsx" "expectGenericsStub.tsx" addComponentGenericsStub
   it "singletonExport" $ testOnFiles "singleton.tsx" "expectSingleton.tsx" replaceExportDefaultSingletons
   it "default imports" $ do
-    allPaths <- (getDirectoryContents $ basePath </> "ChangeUser") >>= (traverse (\path -> ((,) path) <$> getFileStatus (basePath </> "ChangeUser" </> path)))
-    let filePaths = map fst $ filter (not . Turtle.isDirectory . snd) allPaths
-    preparedFiles <- traverse makeTestFile filePaths
-    print preparedFiles
-    -- replaceDefaultImports $ Turtle.fromString "ChangeUser/index.ts"
-    True `shouldBe` True
+    let
+      testFolder = basePath </> "ChangeUser"
+      testFiles :: [FilePath]
+      testFiles = map ((</>) testFolder)
+        [ "index.ts"
+        , "ChangeUser.ts"
+        , "containers/ChangeUserContainer.ts"
+        , "containers/ChangeUserState.ts"
+        , "containers/index.ts"
+        , "components/ChangeUserForm/ChangeUserForm.ts"
+        , "components/ChangeUserForm/index.ts"
+        ]
+      expectFileName :: FilePath -> FilePath
+      expectFileName path = let ext = (unpack . fromJust . Turtle.extension . Turtle.fromString) path in
+        addExtension ((Turtle.encodeString . Turtle.dropExtension . Turtle.decodeString) path <> ".expect") ext
+    preparedFiles <- traverse (\path -> makeTestFile path (expectFileName path)) testFiles
+    let
+      originalContent = map (\TestFile{..} -> _originalContent) preparedFiles
+      expectContent = map (\TestFile{..} -> _expectContent) preparedFiles
+    forM_ preparedFiles recoverFile
+    originalContent `shouldBe` expectContent
