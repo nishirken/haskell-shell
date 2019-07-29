@@ -8,8 +8,8 @@ import Data.Text (Text, pack)
 import Parser.Common (Parser)
 import Data.Maybe (isJust, fromMaybe)
 
-data Definition =
-  Definition
+data Definition
+  = Definition
     { _name :: Text
     , _alias :: Maybe Text
     , _isDefault :: Bool

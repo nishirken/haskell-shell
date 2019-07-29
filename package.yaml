@@ -30,6 +30,7 @@ dependencies:
 - hspec-megaparsec
 - directory
 - unix
+- containers
 
 library:
   source-dirs: src

@@ -3,6 +3,7 @@
 
 module InplacePatterns where
 
+import Const (projectPath)
 import Turtle
 import Prelude hiding (FilePath)
 import FileMatchers (isJsxFile, isIndexFile)
@@ -11,8 +12,9 @@ import qualified System.IO.Strict as StrictIO
 import Parser.ExportSingletons (exportSingletonsParser)
 import Parser.Statement (statementParser, Definition (..), ExportDefinition (..), Statement (..))
 import Text.Megaparsec (parse, parseTest)
-import Data.Either (fromRight)
-import Data.Maybe (isJust)
+import Data.Either (fromRight, isRight)
+import Data.Maybe (isJust, fromMaybe)
+import qualified Data.Map as M
 
 textLinesFromFile :: FilePath -> IO [Text.Text]
 textLinesFromFile path = do
@@ -64,22 +66,50 @@ printDefinition Anonimous = ""
 printDefinitions :: [Definition] -> Text.Text
 printDefinitions = foldr (\definition acc -> (printDefinition definition) <> ", " <> acc) ""
 
-getDefaultName :: 
-
-printExportDefinition :: ExportDefinition -> Bool -> Text.Text
-printExportDefinition (Class name) isDefault = 
+printExportDefinition :: ExportDefinition -> Text.Text -> Text.Text
+printExportDefinition (Class name) defaultName = "export class " <> (fromMaybe defaultName name)
 
 printStatement :: Statement -> Text.Text
-printStatement Import{..} = let isSingleDefault Definition{..} = _isDefault == True 
-  if length _definitions == 1 && (isSingleDefault $ head _definitions) == True
+printStatement Import{..} = let isSingleDefault Definition{..} = _isDefault in
+  if length _definitions == 1 && isSingleDefault (head _definitions)
   then "import " <> printDefinition (head _definitions) <> " "
   else "import { " <> printDefinitions _definitions <> " } "
 printStatement ExportFrom{..} = "export { " <> printDefinitions _definitions <> " } "
-printStatement (Export definition isDefault) = printExportDefinition definition isDefault
+printStatement (Export definition isDefault) = printExportDefinition definition ""
 
-replaceDefaultImports :: FilePath -> IO ()
-replaceDefaultImports path = do
+newtype ImportStatements = ImportStatements [Statement] deriving (Eq, Show)
+newtype ExportFromStatements = ExportFromStatements [Statement] deriving (Eq, Show)
+newtype ExportStatements = ExportStatements [Statement] deriving (Eq, Show)
+
+isProjectPath :: Statement -> Bool
+isProjectPath Import{..} = or $ map (Text.isPrefixOf _path) ["const", "controls"]
+
+hasDefault :: Statement -> Bool
+hasDefault Import{..} = or $ [ _isDefault | Definition{..} <- _definitions ]
+
+makeDefaultImportsMap :: [(FilePath, [Statement])] -> M.Map FilePath ImportStatements
+makeDefaultImportsMap xs = M.fromList $
+  map (\(path, statements) -> (path, ImportStatements $ filter (\x -> isProjectPath x && hasDefault x) [ x | x@Import{} <- statements ])) xs
+
+makeExportFromMap :: [(FilePath, [Statement])] -> M.Map FilePath ExportFromStatements
+makeExportFromMap xs = M.fromList $
+  map (\(path, statements) -> (path, ExportFromStatements [ x | x@ExportFrom{} <- statements ])) xs
+
+makeExportMap :: [(FilePath, [Statement])] -> M.Map FilePath ExportStatements
+makeExportMap xs = M.fromList $
+  map (\(path, statements) -> (path, ExportStatements [ x | x@Export{} <- statements ])) xs
+
+parseOne :: FilePath -> IO (FilePath, [Statement])
+parseOne path = do
   content <- Text.pack <$> StrictIO.readFile (encodeString path)
-  let statements = parse statementParser (encodeString path) content
-  print statements
+  pure $ (path, fromRight [] $ parse statementParser (encodeString path) content)
+
+replaceDefaultImports :: [FilePath] -> IO ()
+replaceDefaultImports paths = do
+  parsed <- traverse parseOne paths
+  let
+    statements = map (\(path, x) -> (projectPath </> path, x)) parsed
+    importStatements = makeDefaultImportsMap statements
+    exportFromStatements = makeExportFromMap statements
+    exportMap = makeExportMap statements
   pure ()
