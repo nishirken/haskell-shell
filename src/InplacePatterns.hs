@@ -14,7 +14,7 @@ import Parser.Statement (statementParser, Definition (..), ExportDefinition (..)
 import Text.Megaparsec (parse, parseTest)
 import Data.Either (fromRight, isRight)
 import Data.Maybe (isJust, fromMaybe)
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 textLinesFromFile :: FilePath -> IO [Text.Text]
 textLinesFromFile path = do
@@ -81,15 +81,37 @@ newtype ImportStatements = ImportStatements [Statement] deriving (Eq, Show)
 newtype ExportFromStatements = ExportFromStatements [Statement] deriving (Eq, Show)
 newtype ExportStatements = ExportStatements [Statement] deriving (Eq, Show)
 
+isScriptFile :: Statement -> Bool
+isScriptFile Import{..} = not . or $ map (\x -> Text.isSuffixOf x _path)
+  [ ".scss"
+  , ".css"
+  , ".svg"
+  , ".png"
+  , ".jpg"
+  ]
+
 isProjectPath :: Statement -> Bool
-isProjectPath Import{..} = or $ map (Text.isPrefixOf _path) ["const", "controls"]
+isProjectPath Import{..} = or $ map (\x -> Text.isPrefixOf x _path)
+  [ "const"
+  , "controls"
+  , "hoc"
+  , "layouts"
+  , "routes"
+  , "services"
+  , "styles/variables"
+  , "state"
+  , "store"
+  , "widgets"
+  , "./"
+  ]
 
 hasDefault :: Statement -> Bool
 hasDefault Import{..} = or $ [ _isDefault | Definition{..} <- _definitions ]
 
 makeDefaultImportsMap :: [(FilePath, [Statement])] -> M.Map FilePath ImportStatements
 makeDefaultImportsMap xs = M.fromList $
-  map (\(path, statements) -> (path, ImportStatements $ filter (\x -> isProjectPath x && hasDefault x) [ x | x@Import{} <- statements ])) xs
+  map (\(path, statements) -> (path, ImportStatements $
+    filter (\x -> isScriptFile x && isProjectPath x && hasDefault x) [ x | x@Import{} <- statements ])) xs
 
 makeExportFromMap :: [(FilePath, [Statement])] -> M.Map FilePath ExportFromStatements
 makeExportFromMap xs = M.fromList $
@@ -109,7 +131,8 @@ replaceDefaultImports paths = do
   parsed <- traverse parseOne paths
   let
     statements = map (\(path, x) -> (projectPath </> path, x)) parsed
-    importStatements = makeDefaultImportsMap statements
-    exportFromStatements = makeExportFromMap statements
+    defaultImportMap = makeDefaultImportsMap statements
+    exportFromMap = makeExportFromMap statements
     exportMap = makeExportMap statements
+  print $ foldr max 0 $ map (\(ImportStatements xs) -> length xs) (map snd $ M.toList defaultImportMap)
   pure ()

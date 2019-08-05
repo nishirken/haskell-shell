@@ -78,7 +78,7 @@ pathParser :: Parser Text
 pathParser = do
   space
   char '\''
-  path <- some $ try letterChar <|> try (char '.') <|> char '/'
+  path <- some $ try alphaNumChar <|> try (char '.') <|> try (char '-') <|> char '/'
   string "';"
   pure $ pack path
 

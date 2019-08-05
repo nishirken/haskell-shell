@@ -8,8 +8,10 @@ import Test.Hspec.Megaparsec (shouldParse)
 import Text.Megaparsec (parse)
 import Parser.ExportSingletons
 import Parser.Statement
+import Parser.ExtendObservable
 import Text.RawString.QQ (r)
 import Data.Text (pack)
+import qualified Data.Map as M
 
 parserSpec :: Spec
 parserSpec = describe "Parser" $ do
@@ -217,7 +219,7 @@ parserSpec = describe "Parser" $ do
         });|]
         expect = Export Lambda True
       parse exportParser "" testStr `shouldParse` expect
-    
+
   context "context" $ do
     let
       testStr = [r|
@@ -227,6 +229,7 @@ parserSpec = describe "Parser" $ do
           AnotherClass as Another,
           default as State,
         } from 'folder/file';
+        import Widget from 'widgets';
 
         import 'library';
 
@@ -273,6 +276,7 @@ parserSpec = describe "Parser" $ do
           , Definition "default" (Just "State") True
           ]
           "folder/file"
+        , Import [ Definition "Widget" Nothing True ] "widgets"
         , Import [Anonimous] "library"
         , Export (Const "Url") False
         , Export (ObjectCreation "SomeClass") True
@@ -324,3 +328,56 @@ parserSpec = describe "Parser" $ do
         , Export (Class (Just "LoginFormState")) True
         ]
     parse statementParser "" content `shouldParse` expect
+
+  context "ExtendObservable" $ do
+    it "classParser" $ do
+      let
+        testStr = [r|
+          import { action, extendObservable } from 'mobx';
+          import GridFormState from './GridFormState';
+          /* tslint:disable */
+          export default abstract class EntityState {
+            loading: any;
+            public abstract forms: GridFormState[];
+
+            constructor() {
+              this.reset();
+            }
+
+            @action
+            protected reset(): void {
+              // it's not clear why form doesn't existed from calling reset in constructor
+              this.forms.forEach((form: GridFormState) => form && form.resetMe());
+              extendObservable(this, {
+                loading: false,
+              });
+            }
+          }|]
+        expect = [r|
+          loading: any;
+          public abstract forms: GridFormState[];
+
+          constructor() {
+            this.reset();
+          }
+
+          @action
+          protected reset(): void {
+            // it's not clear why form doesn't existed from calling reset in constructor
+            this.forms.forEach((form: GridFormState) => form && form.resetMe());
+            extendObservable(this, {
+              loading: false,
+            });
+          }
+        |]
+      parse classParser "" testStr `shouldParse` expect
+
+    it "extendObservableParser" $ do
+      let
+        testStr = [r|
+          extendObservable(this, {
+            loading: false,
+            list: [],
+          });
+        |]
+        expect = M

@@ -17,8 +17,5 @@ startRefactor = do
   Turtle.cd projectPath
   -- jsPaths <- makeAbsolute projectPath <$> findJsPaths
   tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  -- Turtle.cd curr
-  -- condPaths <- traverse inPathsFile tsPaths
-  -- let onlyChangedTsPaths = map fst $ filter (\(_, y) -> y == True) $ zip tsPaths condPaths
   replaceDefaultImports tsPaths
   pure ()
