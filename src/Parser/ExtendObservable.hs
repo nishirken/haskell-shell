@@ -22,3 +22,7 @@ classParser = do
 extendObservableParser :: Parser ObservableDefinitions
 extendObservableParser = do
   pure M.empty
+
+addClassObsPropertiesParser :: T.Text -> Parser T.Text
+addClassObsPropertiesParser classContent = do
+  pure classContent

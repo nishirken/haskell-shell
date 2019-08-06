@@ -91,7 +91,7 @@ isScriptFile Import{..} = not . or $ map (\x -> Text.isSuffixOf x _path)
   ]
 
 isProjectPath :: Statement -> Bool
-isProjectPath Import{..} = or $ map (\x -> Text.isPrefixOf x _path)
+isProjectPath Import{..} = any (`Text.isPrefixOf` _path)
   [ "const"
   , "controls"
   , "hoc"
@@ -106,7 +106,7 @@ isProjectPath Import{..} = or $ map (\x -> Text.isPrefixOf x _path)
   ]
 
 hasDefault :: Statement -> Bool
-hasDefault Import{..} = or $ [ _isDefault | Definition{..} <- _definitions ]
+hasDefault Import{..} = or [ _isDefault | Definition{..} <- _definitions ]
 
 makeDefaultImportsMap :: [(FilePath, [Statement])] -> M.Map FilePath ImportStatements
 makeDefaultImportsMap xs = M.fromList $
@@ -134,5 +134,5 @@ replaceDefaultImports paths = do
     defaultImportMap = makeDefaultImportsMap statements
     exportFromMap = makeExportFromMap statements
     exportMap = makeExportMap statements
-  print $ foldr max 0 $ map (\(ImportStatements xs) -> length xs) (map snd $ M.toList defaultImportMap)
+  print $ foldr (max . (\(ImportStatements xs) -> length xs) . snd) 0 $ M.toList defaultImportMap
   pure ()
