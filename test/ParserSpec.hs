@@ -354,22 +354,22 @@ parserSpec = describe "Parser" $ do
             }
           }|]
         expect = [r|
-          loading: any;
-          public abstract forms: GridFormState[];
+            loading: any;
+            public abstract forms: GridFormState[];
 
-          constructor() {
-            this.reset();
-          }
+            constructor() {
+              this.reset();
+            }
 
-          @action
-          protected reset(): void {
-            // it's not clear why form doesn't existed from calling reset in constructor
-            this.forms.forEach((form: GridFormState) => form && form.resetMe());
-            extendObservable(this, {
-              loading: false,
-            });
-          }
-        |]
+            @action
+            protected reset(): void {
+              // it's not clear why form doesn't existed from calling reset in constructor
+              this.forms.forEach((form: GridFormState) => form && form.resetMe());
+              extendObservable(this, {
+                loading: false,
+              });
+            }
+          |]
       parse classParser "" testStr `shouldParse` expect
 
     it "extendObservableParser" $ do
