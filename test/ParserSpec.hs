@@ -382,7 +382,7 @@ parserSpec = describe "Parser" $ do
         |]
         expect = M.fromList [("loading", "false"), ("list", "[]")]
       parse extendObservableParser "" testStr `shouldParse` expect
-    it "rep" $ do
+    it "addClassObsPropertiesParser" $ do
       let
         testStr = [r|
           import { action, extendObservable } from 'mobx';
@@ -405,6 +405,23 @@ parserSpec = describe "Parser" $ do
               });
             }
           }|]
+        classContent = [r|
+          loading: any;
+            public abstract forms: GridFormState[];
+
+            constructor() {
+              this.reset();
+            }
+
+            @action
+            protected reset(): void {
+              // it's not clear why form doesn't existed from calling reset in constructor
+              this.forms.forEach((form: GridFormState) => form && form.resetMe());
+              extendObservable(this, {
+                loading: false,
+              });
+            }
+        |]
         expect = [r|
           import { action, extendObservable } from 'mobx';
           import GridFormState from './GridFormState';
@@ -430,4 +447,4 @@ parserSpec = describe "Parser" $ do
               });
             }
           }|]
-      parse addClassObsPropsParser "" testStr `shouldParse` expect
+      parse (addClassObsPropertiesParser classContent) "" testStr `shouldParse` expect
