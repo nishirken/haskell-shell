@@ -11,7 +11,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 
 type ObservableDefinitions = M.Map T.Text T.Text
 
-braces :: Parser T.Text -> Parser T.Text
+braces :: Parser a -> Parser a
 braces parser = do
   char '{'
   x <- parser
@@ -39,18 +39,24 @@ entriesParser = do
   fieldName <- some alphaNumChar
   char ':'
   space
-  value <- some $ try (char '[') <|> try (char ']') <|> alphaNumChar
+  value <- some $ try (char '[') <|> try (char ']') <|> try alphaNumChar <|> try (char '\'')
   optional $ char ','
+  skipMany $ try newline <|> spaceChar
   pure (T.pack fieldName, T.pack value)
 
 extendObservableParser :: Parser ObservableDefinitions
 extendObservableParser = do
   skipManyTill anySingle $ string "extendObservable("
-  skipManyTill anySingle $ string "{"
-  entries <- many entriesParser
-  skipManyTill anySingle $ string "});"
+  skipMany $ anySingleBut '{'
+  entries <- braces $ many . try $ entriesParser
   pure $ M.fromList entries
+
+makeObservableDefinition :: (T.Text, T.Text) -> T.Text
+makeObservableDefinition (name, value) =
+  "\n  " <> "@observable public " <> name <> ": any = " <> value <> ";"
 
 addClassObsPropertiesParser :: T.Text -> Parser T.Text
 addClassObsPropertiesParser classContent = do
-  pure classContent
+  definitionsMap <- extendObservableParser
+  let definitions = (mconcat . Prelude.map makeObservableDefinition . M.toList) definitionsMap
+  pure $ definitions <> classContent

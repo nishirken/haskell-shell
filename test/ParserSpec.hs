@@ -378,9 +378,10 @@ parserSpec = describe "Parser" $ do
           extendObservable(this, {
             loading: false,
             list: [],
+            str: '',
           });
         |]
-        expect = M.fromList [("loading", "false"), ("list", "[]")]
+        expect = M.fromList [("loading", "false"), ("list", "[]"), ("str", "''")]
       parse extendObservableParser "" testStr `shouldParse` expect
     it "addClassObsPropertiesParser" $ do
       let
@@ -402,34 +403,13 @@ parserSpec = describe "Parser" $ do
               this.forms.forEach((form: GridFormState) => form && form.resetMe());
               extendObservable(this, {
                 loading: false,
+                list: [],
+                str: '',
               });
             }
           }|]
         classContent = [r|
-          loading: any;
-            public abstract forms: GridFormState[];
-
-            constructor() {
-              this.reset();
-            }
-
-            @action
-            protected reset(): void {
-              // it's not clear why form doesn't existed from calling reset in constructor
-              this.forms.forEach((form: GridFormState) => form && form.resetMe());
-              extendObservable(this, {
-                loading: false,
-              });
-            }
-        |]
-        expect = [r|
-          import { action, extendObservable } from 'mobx';
-          import GridFormState from './GridFormState';
-          /* tslint:disable */
-          export default abstract class EntityState {
-            @observable public loading: boolean = false;
-            @observable public list: any[] = [];
-            @observable public str: any = '';
+            loading: any;
             public abstract forms: GridFormState[];
 
             constructor() {
@@ -446,5 +426,27 @@ parserSpec = describe "Parser" $ do
                 str: '',
               });
             }
-          }|]
+          |]
+        expect = [r|
+  @observable public list: any = [];
+  @observable public loading: any = false;
+  @observable public str: any = '';
+            loading: any;
+            public abstract forms: GridFormState[];
+
+            constructor() {
+              this.reset();
+            }
+
+            @action
+            protected reset(): void {
+              // it's not clear why form doesn't existed from calling reset in constructor
+              this.forms.forEach((form: GridFormState) => form && form.resetMe());
+              extendObservable(this, {
+                loading: false,
+                list: [],
+                str: '',
+              });
+            }
+          |]
       parse (addClassObsPropertiesParser classContent) "" testStr `shouldParse` expect

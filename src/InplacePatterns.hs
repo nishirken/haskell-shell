@@ -10,11 +10,13 @@ import FileMatchers (isJsxFile, isIndexFile)
 import qualified Data.Text as Text
 import qualified System.IO.Strict as StrictIO
 import Parser.ExportSingletons (exportSingletonsParser)
+import Parser.ExtendObservable (addClassObsPropertiesParser, classParser)
 import Parser.Statement (statementParser, Definition (..), ExportDefinition (..), Statement (..))
-import Text.Megaparsec (parse, parseTest)
+import Text.Megaparsec (parse, parseTest, ParseErrorBundle)
 import Data.Either (fromRight, isRight)
 import Data.Maybe (isJust, fromMaybe)
 import qualified Data.Map.Strict as M
+import Data.Void (Void)
 
 textLinesFromFile :: FilePath -> IO [Text.Text]
 textLinesFromFile path = do
@@ -136,3 +138,16 @@ replaceDefaultImports paths = do
     exportMap = makeExportMap statements
   print $ foldr (max . (\(ImportStatements xs) -> length xs) . snd) 0 $ M.toList defaultImportMap
   pure ()
+
+parseClass :: String -> Text.Text -> Either (ParseErrorBundle Text Void) (Text.Text, Text.Text)
+parseClass path content = do
+  classRes <- parse classParser path content
+  withDefinitions <- parse (addClassObsPropertiesParser classRes) path classRes
+  pure (classRes, withDefinitions)
+
+replaceExtendObservable :: FilePath -> IO ()
+replaceExtendObservable path = do
+  content <- Text.pack <$> StrictIO.readFile (encodeString path)
+  case (parseClass (encodeString path) content) of
+    (Right (oldRes, newRes)) -> writeFile (encodeString path) (Text.unpack $ Text.replace oldRes newRes content)
+    (Left _) -> pure ()

@@ -6,7 +6,12 @@ import qualified Turtle
 import CollectPaths (findJsPaths, findTsPaths, makeAbsolute, pathsFromFile)
 import ConvertImports (convert)
 import RenameFile (rename)
-import InplacePatterns (addComponentGenericsStub, replaceExportDefaultSingletons, replaceDefaultImports)
+import InplacePatterns (
+  addComponentGenericsStub
+  , replaceExportDefaultSingletons
+  , replaceDefaultImports
+  , replaceExtendObservable
+  )
 import FileMatchers
 import Const
 
