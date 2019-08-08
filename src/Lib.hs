@@ -3,7 +3,7 @@ module Lib
   ) where
 
 import qualified Turtle
-import CollectPaths (findJsPaths, findTsPaths, makeAbsolute, pathsFromFile)
+import CollectPaths (findJsPaths, findTsPaths, makeAbsolute, pathsFromFile, intersectedPaths)
 import ConvertImports (convert)
 import RenameFile (rename)
 import InplacePatterns (
@@ -11,16 +11,17 @@ import InplacePatterns (
   , replaceExportDefaultSingletons
   , replaceDefaultImports
   , replaceExtendObservable
+  , addTslintDisabled
   )
 import FileMatchers
 import Const
+import Control.Monad (forM_)
+import Data.Foldable (traverse_)
 
 startRefactor :: IO ()
 startRefactor = do
   -- curr <- Turtle.pwd
-  -- paths <- makeAbsolute projectPath <$> pathsFromFile
+  paths <- makeAbsolute projectPath <$> pathsFromFile
   Turtle.cd projectPath
-  -- jsPaths <- makeAbsolute projectPath <$> findJsPaths
   tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  replaceDefaultImports tsPaths
-  pure ()
+  traverse_ addTslintDisabled $ intersectedPaths paths tsPaths

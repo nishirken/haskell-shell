@@ -24,3 +24,10 @@ pathsFromFile = do
 
 makeAbsolute :: FilePath -> [FilePath] -> [FilePath]
 makeAbsolute absPath = map (\path -> absPath </> fromText (Text.replace "./" "" ((Text.pack . encodeString) path)))
+
+intersectedPaths :: [FilePath] -> [FilePath] -> [FilePath]
+intersectedPaths originPaths =
+  filter (\path -> dropExtension path `elem` withoutExtOrigin)
+    where
+      withoutExtOrigin :: [FilePath]
+      withoutExtOrigin = map dropExtension originPaths
