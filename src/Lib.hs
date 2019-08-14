@@ -21,7 +21,8 @@ import Data.Foldable (traverse_)
 startRefactor :: IO ()
 startRefactor = do
   -- curr <- Turtle.pwd
-  paths <- makeAbsolute projectPath <$> pathsFromFile
+  -- paths <- makeAbsolute projectPath <$> pathsFromFile
   Turtle.cd projectPath
-  tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  traverse_ addTslintDisabled $ intersectedPaths paths tsPaths
+  -- tsPaths <- makeAbsolute projectPath <$> findTsPaths
+  jsPaths <- makeAbsolute projectPath <$> findJsPaths
+  forM_ jsPaths rename 
