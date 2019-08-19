@@ -11,8 +11,6 @@ rename :: FilePath -> IO ()
 rename path = do
   isJsx <- isJsxFile path
   let gitMvCmd = "git mv " <> encodeString path <> " " <> encodeString (newPath isJsx)
-  print $ "oldPath: " <> path
-  print $ "newPath: " <> newPath isJsx
   callCommand gitMvCmd
     where
       newPath ::Bool -> FilePath
