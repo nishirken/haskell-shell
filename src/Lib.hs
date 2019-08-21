@@ -21,7 +21,6 @@ import Data.Foldable (traverse_)
 startRefactor :: IO ()
 startRefactor = do
   projectPath <- getProjectPath
-  paths <- makeAbsolute projectPath <$> pathsFromFile
   Turtle.cd projectPath
   tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  forM_ (intersectedPaths paths tsPaths) replaceExtendObservable
+  forM_ tsPaths convert
