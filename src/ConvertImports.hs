@@ -7,7 +7,7 @@ import Turtle
 import Prelude hiding (FilePath)
 import Data.Maybe (mapMaybe, fromMaybe)
 import qualified Data.Text as Text
-import Const (projectPath)
+import Const (getProjectPath)
 import Data.Foldable (traverse_)
 import InplacePatterns (textLinesFromFile)
 import Text.Megaparsec (parse)
@@ -46,6 +46,7 @@ convert filePath = do
         makeNewContent tempContent xs
       replaceOneImport :: Text.Text -> PreparedPath -> IO Text
       replaceOneImport initialContent PreparedPath{..} = do
+        projectPath <- getProjectPath
         cd $ directory filePath
         cd $ fromText relativePath
         importTargetPath <- pwd

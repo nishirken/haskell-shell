@@ -2,7 +2,11 @@
 
 module Const where
 
-import qualified Turtle
+import Turtle
+import Prelude hiding (FilePath)
+import System.Directory (getHomeDirectory)
 
-projectPath :: Turtle.FilePath
-projectPath = "/Users/dmitry.skurihin/Projects/MonopolyOnline.Frontend/frontend/src/"
+getProjectPath :: IO FilePath
+getProjectPath = do
+  homeDir <- getHomeDirectory
+  pure $ decodeString homeDir </> "Projects/MonopolyOnline.Frontend/frontend/src/"

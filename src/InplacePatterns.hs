@@ -3,7 +3,7 @@
 
 module InplacePatterns where
 
-import Const (projectPath)
+import Const (getProjectPath)
 import Turtle
 import Prelude hiding (FilePath)
 import FileMatchers (isJsxFile, isIndexFile)
@@ -130,6 +130,7 @@ parseOne path = do
 
 replaceDefaultImports :: [FilePath] -> IO ()
 replaceDefaultImports paths = do
+  projectPath <- getProjectPath
   parsed <- traverse parseOne paths
   let
     statements = map (\(path, x) -> (projectPath </> path, x)) parsed
