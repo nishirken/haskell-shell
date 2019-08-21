@@ -24,4 +24,4 @@ startRefactor = do
   paths <- makeAbsolute projectPath <$> pathsFromFile
   Turtle.cd projectPath
   tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  forM_ (intersectedPaths paths tsPaths) addTslintDisabled
+  forM_ (intersectedPaths paths tsPaths) addComponentGenericsStub
