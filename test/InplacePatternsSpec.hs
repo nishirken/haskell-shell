@@ -45,31 +45,8 @@ recoverFile TestFile{..} = writeFile _path $ unpack _originalContent
 
 inplacePatternsSpec :: Spec
 inplacePatternsSpec = describe "InplacePatterns" $ do
-  it "exportDefault in index files" $ testOnFiles "index.js" "expectIndex.js" replaceExportDefaultFrom
-  it "js extension in imports" $ testOnFiles "jsImport.js" "jsImportExpect.js" replaceJsExtensionInImports
-  it "tslintDisable" $ testOnFiles "tslintDisable.tsx" "expectTslintDisable.tsx" addTslintDisabled
-  it "genericsStub" $ testOnFiles "genericsStub.tsx" "expectGenericsStub.tsx" addComponentGenericsStub
-  it "singletonExport" $ testOnFiles "singleton.tsx" "expectSingleton.tsx" replaceExportDefaultSingletons
-  -- it "default imports" $ do
-  --   let
-  --     testFolder = basePath </> "ChangeUser"
-  --     testFiles :: [FilePath]
-  --     testFiles = map ((</>) testFolder)
-  --       [ "index.ts"
-  --       , "ChangeUser.ts"
-  --       , "containers/ChangeUserContainer.ts"
-  --       , "containers/ChangeUserState.ts"
-  --       , "containers/index.ts"
-  --       , "components/ChangeUserForm/ChangeUserForm.ts"
-  --       , "components/ChangeUserForm/index.ts"
-  --       ]
-  --     expectFileName :: FilePath -> FilePath
-  --     expectFileName path = let ext = (unpack . fromJust . Turtle.extension . Turtle.fromString) path in
-  --       addExtension ((Turtle.encodeString . Turtle.dropExtension . Turtle.decodeString) path <> ".expect") ext
-  --   preparedFiles <- traverse (\path -> makeTestFile path (expectFileName path)) testFiles
-  --   let
-  --     originalContent = map (\TestFile{..} -> _originalContent) preparedFiles
-  --     expectContent = map (\TestFile{..} -> _expectContent) preparedFiles
-  --   replaceDefaultImports (Turtle.fromString $ head testFiles)
-  --   forM_ preparedFiles recoverFile
-  --   originalContent `shouldBe` expectContent
+  it "exportDefault in index files" $ testOnFiles "index.js" "index.expect.js" replaceExportDefaultFrom
+  it "js extension in imports" $ testOnFiles "jsImport.js" "jsImport.expect.js" replaceJsExtensionInImports
+  it "tslintDisable" $ testOnFiles "tslintDisable.tsx" "tslintDisable.expect.tsx" addTslintDisabled
+  it "genericsStub" $ testOnFiles "genericsStub.tsx" "genericsStub.expect.tsx" addComponentGenericsStub
+  it "singletonExport" $ testOnFiles "singleton.tsx" "singleton.expect.tsx" replaceExportDefaultSingletons

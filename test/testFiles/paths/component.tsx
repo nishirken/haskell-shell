@@ -1,10 +1,10 @@
-import * as c from 'const';
-import Harmonica from './innerFolder';
-import Comp as Harmonica, {
-  default as Harmonica,
-  someConst as AnotherConst
-} from './innerFolder';
-import LoginFormState as State from './innerFolder/State.ts';
+import * as const from 'const';
+import 'services/validators';
+import SomeService from 'services/SomeService';
+import { observable, action } from 'mobx';
+import { required, length, isPhone } from 'services/validators';
+import { formatPhone } from 'services/utils';
 
+export const api = 'url';
 
-
+export default class State {}

@@ -18,13 +18,13 @@ parserSpec = describe "Parser" $ do
   context "Export singleton" $ do
     it "first" $ do
       let
-        testStr = "export default new ModalManager();"
-        expect = "export const modalManager = new ModalManager();"
+        testStr = "export default new Manager();"
+        expect = "export const manager = new Manager();"
       parse exportSingletonsParser "" testStr `shouldParse` expect
     it "second" $ do
       let
-        testStr = "export default new LoginFormState({ fields });"
-        expect = "export const loginFormState = new LoginFormState({ fields });"
+        testStr = "export default new State({ fields });"
+        expect = "export const state = new State({ fields });"
       parse exportSingletonsParser "" testStr `shouldParse` expect
   context "Import" $ do
     it "normal one line, one definition" $ do
@@ -301,31 +301,26 @@ parserSpec = describe "Parser" $ do
     it "length" $ (length <$> parse statementParser "" testStr) `shouldBe` (Right $ length expect)
     it "compare parse" $ parse statementParser "" testStr `shouldParse` expect
   it "from file" $ do
-    content <- pack <$> readFile "./test/testFiles/paths/innerFolder/State.ts"
+    content <- pack <$> readFile "./test/testFiles/paths/component.tsx"
     let
       expect =
-        [ Import [Star (Just "c")] "const"
-        , Import [Anonimous] "services/formBindings"
-        , Import [Definition "Account" Nothing True] "services/Api/Account"
+        [ Import [Star (Just "const")] "const"
+        , Import [Anonimous] "services/validators"
+        , Import [Definition "SomeService" Nothing True] "services/SomeService"
         , Import
           [ Definition "observable" Nothing False
           , Definition "action" Nothing False
           ]
           "mobx"
-        , Import [Definition "FormState" Nothing True] "services/FormState"
-        , Import [Definition "ResponseError" Nothing True] "services/Api/ResponseError"
         , Import
           [ Definition "required" Nothing False
-          , Definition "validateNewLogin" Nothing False
+          , Definition "length" Nothing False
           , Definition "isPhone" Nothing False
           ]
           "services/validators"
-        , Import [Definition "routeManager" Nothing True] "services/routeManager"
-        , Import [Definition "formatPhoneToServerString" Nothing False] "services/utils"
+        , Import [Definition "formatPhone" Nothing False] "services/utils"
         , Export (Const "api") False
-        , Export (Const "api2") False
-        , Export (Const "fields") False
-        , Export (Class (Just "LoginFormState")) True
+        , Export (Class (Just "State")) True
         ]
     parse statementParser "" content `shouldParse` expect
 
@@ -334,11 +329,10 @@ parserSpec = describe "Parser" $ do
       let
         testStr = [r|
           import { action, extendObservable } from 'mobx';
-          import GridFormState from './GridFormState';
-          /* tslint:disable */
-          export default abstract class EntityState {
+
+          export default abstract class State {
             loading: any;
-            public abstract forms: GridFormState[];
+            otherField: any;
 
             constructor() {
               this.reset();
@@ -346,8 +340,6 @@ parserSpec = describe "Parser" $ do
 
             @action
             protected reset(): void {
-              // it's not clear why form doesn't existed from calling reset in constructor
-              this.forms.forEach((form: GridFormState) => form && form.resetMe());
               extendObservable(this, {
                 loading: false,
               });
@@ -355,7 +347,7 @@ parserSpec = describe "Parser" $ do
           }|]
         expect = [r|
             loading: any;
-            public abstract forms: GridFormState[];
+            otherField: any;
 
             constructor() {
               this.reset();
@@ -363,8 +355,6 @@ parserSpec = describe "Parser" $ do
 
             @action
             protected reset(): void {
-              // it's not clear why form doesn't existed from calling reset in constructor
-              this.forms.forEach((form: GridFormState) => form && form.resetMe());
               extendObservable(this, {
                 loading: false,
               });
@@ -387,11 +377,10 @@ parserSpec = describe "Parser" $ do
       let
         testStr = [r|
           import { action, extendObservable } from 'mobx';
-          import GridFormState from './GridFormState';
-          /* tslint:disable */
-          export default abstract class EntityState {
+
+          export default abstract class State {
             loading: any;
-            public abstract forms: GridFormState[];
+            otherField: any;
 
             constructor() {
               this.reset();
@@ -399,8 +388,6 @@ parserSpec = describe "Parser" $ do
 
             @action
             protected reset(): void {
-              // it's not clear why form doesn't existed from calling reset in constructor
-              this.forms.forEach((form: GridFormState) => form && form.resetMe());
               extendObservable(this, {
                 loading: false,
                 list: [],
@@ -410,7 +397,7 @@ parserSpec = describe "Parser" $ do
           }|]
         classContent = [r|
             loading: any;
-            public abstract forms: GridFormState[];
+            otherField: any;
 
             constructor() {
               this.reset();
@@ -418,8 +405,6 @@ parserSpec = describe "Parser" $ do
 
             @action
             protected reset(): void {
-              // it's not clear why form doesn't existed from calling reset in constructor
-              this.forms.forEach((form: GridFormState) => form && form.resetMe());
               extendObservable(this, {
                 loading: false,
                 list: [],
@@ -432,7 +417,7 @@ parserSpec = describe "Parser" $ do
   @observable public loading: any = false;
   @observable public str: any = '';
             loading: any;
-            public abstract forms: GridFormState[];
+            otherField: any;
 
             constructor() {
               this.reset();
@@ -440,8 +425,6 @@ parserSpec = describe "Parser" $ do
 
             @action
             protected reset(): void {
-              // it's not clear why form doesn't existed from calling reset in constructor
-              this.forms.forEach((form: GridFormState) => form && form.resetMe());
               extendObservable(this, {
                 loading: false,
                 list: [],

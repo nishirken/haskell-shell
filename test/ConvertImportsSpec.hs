@@ -4,28 +4,26 @@ module ConvertImportsSpec where
 
 import Test.Hspec (describe, context, it, Spec, shouldBe)
 import ConvertImports
-import Const (projectPath)
 
 convertImportsSpec :: Spec
 convertImportsSpec = describe "ConvertImportsSpec" $ do
   it "prepareRelativePaths" $ do
     let
       testData =
-        [ "import { classes } from 'typestyle';"
-        , "import { outerCardClassName } from '../../CargoOrder/CargoOrder.styles';"
-        , "import { CargoStatus } from '../../Cargo/models/CargoStatus';"
-        , "import { cargoPageState } from '../CargoPageState';"
-        , "interface IAuctionBidWindowProps {"
+        [ "import { Component } from 'react';"
+        , "import { oneConst } from '../../components/constants';"
+        , "import { status } from '../../models/status';"
+        , "import { state } from '../State';"
+        , "interface Props {"
         , "  className?: string;"
         , "}"
         , ""
-        , "const delayAfterNewBid = 1500;"
         ]
     let
       expectData =
-        [ PreparedPath "import { outerCardClassName } from '../../CargoOrder/CargoOrder.styles';" "../../"
-        , PreparedPath "import { CargoStatus } from '../../Cargo/models/CargoStatus';" "../../"
-        , PreparedPath "import { cargoPageState } from '../CargoPageState';" "../"
+        [ PreparedPath "import { oneConst } from '../../components/constants';" "../../"
+        , PreparedPath "import { status } from '../../models/status';" "../../"
+        , PreparedPath "import { state } from '../State';" "../"
         ]
     prepareRelativePaths testData `shouldBe` expectData
 
@@ -35,6 +33,6 @@ convertImportsSpec = describe "ConvertImportsSpec" $ do
   it "replacePathLine" $
     shouldBe
       (replacePathLine
-        "import { outerCardClassName } from '../../CargoOrder/CargoOrder.styles';"
+        "import { State } from '../../states/State';"
         "../../" "services/module")
-      "import { outerCardClassName } from 'services/module/CargoOrder/CargoOrder.styles';"
+      "import { State } from 'services/module/states/State';"

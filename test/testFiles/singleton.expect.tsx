@@ -6,4 +6,4 @@ const fields = {
 class State extends SomeState {
 }
 
-export default new State({ fields });
+export const state = new State({ fields });
