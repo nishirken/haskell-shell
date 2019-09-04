@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module CollectPaths where
+module ProcessPaths where
 
 import Turtle
 import Prelude hiding (FilePath)
 import qualified Data.Text as Text
+import System.Directory (getHomeDirectory)
 
 collectFilePaths :: Shell FilePath -> IO [FilePath]
 collectFilePaths shellPaths = foldShell shellPaths (FoldShell accFilePaths [] pure)
@@ -31,3 +32,19 @@ intersectedPaths originPaths =
     where
       withoutExtOrigin :: [FilePath]
       withoutExtOrigin = map dropExtension originPaths
+
+isIndexFile :: FilePath -> Bool
+isIndexFile path = not . null . match (contains "index.") $ format fp path
+
+isJsxFile :: FilePath -> IO Bool
+isJsxFile path = not . null . match (contains "React") <$> readTextFile path
+
+inPathsFile :: FilePath -> IO Bool
+inPathsFile path =
+  not . null . match (contains $ (text . Text.pack . encodeString) $ basename path)
+  <$> readTextFile "paths.txt"
+
+getProjectPath :: IO FilePath
+getProjectPath = do
+  homeDir <- getHomeDirectory
+  pure $ decodeString homeDir </> "Projects/MonopolyOnline.Frontend/frontend/src/"

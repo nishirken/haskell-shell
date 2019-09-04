@@ -1,17 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser.ExportSingletons where
+module ExportSingletons where
 
-import Parser.Common (Parser)
+import Common (Parser)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Data.Text as T
 import Data.Char (toLower)
-import Data.Maybe (fromMaybe)
 
-type NewExportSingletonLine = T.Text
-
-exportSingletonsParser :: Parser NewExportSingletonLine
+exportSingletonsParser :: Parser T.Text
 exportSingletonsParser = do
   string "export default new "
   className <- some letterChar

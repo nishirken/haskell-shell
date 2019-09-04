@@ -7,11 +7,10 @@ import Turtle
 import Prelude hiding (FilePath)
 import Data.Maybe (mapMaybe, fromMaybe)
 import qualified Data.Text as Text
-import Const (getProjectPath)
+import ProcessPaths (getProjectPath)
 import Data.Foldable (traverse_)
 import InplacePatterns (textLinesFromFile)
 import Text.Megaparsec (parse)
-import Parser.Statement (Statement (..))
 import Data.Either (isRight)
 
 data PreparedPath = PreparedPath
@@ -32,8 +31,8 @@ absolutePrefix targetPath basePath = fromMaybe "" $ stripPrefix basePath targetP
 replacePathLine :: Text -> Text -> FilePath -> Text
 replacePathLine line oldRel newAbs = Text.replace oldRel ((Text.pack . encodeString $ newAbs) <> "/") line
 
-convert :: Turtle.FilePath -> IO ()
-convert filePath = do
+convertToAbsolute :: Turtle.FilePath -> IO ()
+convertToAbsolute filePath = do
   content <- readTextFile filePath
   let relParts = prepareRelativePaths $ Text.lines content
   if (not . null) relParts then makeNewContent content relParts >>= writeTextFile filePath else pure ()

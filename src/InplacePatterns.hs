@@ -3,15 +3,16 @@
 
 module InplacePatterns where
 
-import Const (getProjectPath)
 import Turtle
 import Prelude hiding (FilePath)
-import FileMatchers (isJsxFile, isIndexFile)
+import ProcessPaths (isJsxFile, isIndexFile, getProjectPath)
 import qualified Data.Text as Text
 import qualified System.IO.Strict as StrictIO
-import Parser.ExportSingletons (exportSingletonsParser)
-import Parser.ExtendObservable (addClassObsPropertiesParser, classParser)
-import Parser.Statement (statementParser, Definition (..), ExportDefinition (..), Statement (..))
+import ExportSingletons (exportSingletonsParser)
+import ExtendObservable (addClassObsPropertiesParser, classParser)
+import ReplaceDefaultImports.Statement (statementParser, Statement (..))
+import ReplaceDefaultImports.ImportDefinition (ImportDefinition (..))
+import ReplaceDefaultImports.ExportDefinition (ExportDefinition (..))
 import Text.Megaparsec (parse, parseTest, ParseErrorBundle)
 import Data.Either (fromRight, isRight)
 import Data.Maybe (isJust, fromMaybe)
@@ -60,19 +61,19 @@ printAlias :: Maybe Text.Text -> Text.Text
 printAlias (Just alias) = " as " <> alias
 printAlias Nothing = ""
 
-printDefinition :: Definition -> Text.Text
-printDefinition Definition{..} = _name <> printAlias _alias
+printDefinition :: ImportDefinition -> Text.Text
+printDefinition Named{..} = _name <> printAlias _alias
 printDefinition Star{..} = "*" <> printAlias _alias
 printDefinition Anonimous = ""
 
-printDefinitions :: [Definition] -> Text.Text
+printDefinitions :: [ImportDefinition] -> Text.Text
 printDefinitions = foldr (\definition acc -> (printDefinition definition) <> ", " <> acc) ""
 
 printExportDefinition :: ExportDefinition -> Text.Text -> Text.Text
 printExportDefinition (Class name) defaultName = "export class " <> (fromMaybe defaultName name)
 
 printStatement :: Statement -> Text.Text
-printStatement Import{..} = let isSingleDefault Definition{..} = _isDefault in
+printStatement Import{..} = let isSingleDefault Named{..} = _isDefault in
   if length _definitions == 1 && isSingleDefault (head _definitions)
   then "import " <> printDefinition (head _definitions) <> " "
   else "import { " <> printDefinitions _definitions <> " } "
@@ -108,7 +109,7 @@ isProjectPath Import{..} = any (`Text.isPrefixOf` _path)
   ]
 
 hasDefault :: Statement -> Bool
-hasDefault Import{..} = or [ _isDefault | Definition{..} <- _definitions ]
+hasDefault Import{..} = or [ _isDefault | Named{..} <- _definitions ]
 
 makeDefaultImportsMap :: [(FilePath, [Statement])] -> M.Map FilePath ImportStatements
 makeDefaultImportsMap xs = M.fromList $

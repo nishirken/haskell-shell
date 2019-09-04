@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser.ExtendObservable where
+module ExtendObservable where
 
-import Parser.Common (Parser)
+import Common (Parser)
 import Data.Text as T
 import Data.Map.Strict as M
 import Text.Megaparsec

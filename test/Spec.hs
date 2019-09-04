@@ -1,13 +1,17 @@
 import Test.Hspec (hspec)
 
 import ConvertImportsSpec (convertImportsSpec)
-import CollectPathsSpec (collectPathsSpec)
+import ProcessPathsSpec (processPathsSpec)
 import InplacePatternsSpec (inplacePatternsSpec)
-import ParserSpec (parserSpec)
+import ExportSingletonsSpec (exportSingletonsSpec)
+import ExtendObservableSpec (extendObservableSpec)
+import ReplaceDefaultImportsSpec.StatementSpec (statementSpec)
 
 main :: IO ()
 main = hspec $ do
   convertImportsSpec
-  collectPathsSpec
+  processPathsSpec
   inplacePatternsSpec
-  parserSpec
+  exportSingletonsSpec
+  extendObservableSpec
+  statementSpec

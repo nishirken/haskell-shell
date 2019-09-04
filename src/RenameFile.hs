@@ -4,11 +4,11 @@ module RenameFile where
 
 import Turtle
 import Prelude hiding (FilePath)
-import FileMatchers (isJsxFile)
+import ProcessPaths (isJsxFile)
 import System.Process (callCommand)
 
-rename :: FilePath -> IO ()
-rename path = do
+renameToTs :: FilePath -> IO ()
+renameToTs path = do
   isJsx <- isJsxFile path
   let gitMvCmd = "git mv " <> encodeString path <> " " <> encodeString (newPath isJsx)
   callCommand gitMvCmd

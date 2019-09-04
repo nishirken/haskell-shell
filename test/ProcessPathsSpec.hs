@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module CollectPathsSpec where
+module ProcessPathsSpec where
 
 import Test.Hspec (describe, it, Spec, shouldBe)
-import CollectPaths (makeAbsolute)
+import ProcessPaths (makeAbsolute)
 
-collectPathsSpec :: Spec
-collectPathsSpec = describe "CollectPathsSpec" $
+processPathsSpec :: Spec
+processPathsSpec = describe "ProcessPathsSpec" $
   it "makeAbsolute" $ do
     let relPaths = ["./src/folder", "./src/anotherFolder"]
     let expectedPaths = ["/Users/someUser/projectPath/src/folder", "/Users/someUser/projectPath/src/anotherFolder"]

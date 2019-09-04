@@ -3,9 +3,16 @@ module Lib
   ) where
 
 import qualified Turtle
-import CollectPaths (findJsPaths, findTsPaths, makeAbsolute, pathsFromFile, intersectedPaths)
-import ConvertImports (convert)
-import RenameFile (rename)
+import ProcessPaths
+  ( findJsPaths
+  , findTsPaths
+  , makeAbsolute
+  , pathsFromFile
+  , intersectedPaths
+  , getProjectPath
+  )
+import ConvertImports (convertToAbsolute)
+import RenameFile (renameToTs)
 import InplacePatterns (
   addComponentGenericsStub
   , replaceExportDefaultSingletons
@@ -13,8 +20,6 @@ import InplacePatterns (
   , replaceExtendObservable
   , addTslintDisabled
   )
-import FileMatchers
-import Const
 import Control.Monad (forM_)
 import Data.Foldable (traverse_)
 
@@ -23,4 +28,4 @@ startRefactor = do
   projectPath <- getProjectPath
   Turtle.cd projectPath
   tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  forM_ tsPaths convert
+  forM_ tsPaths convertToAbsolute

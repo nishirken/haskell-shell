@@ -1,4 +1,4 @@
-module Parser.Common where
+module Common where
 
 import Data.Text (Text)
 import Text.Megaparsec (Parsec)
