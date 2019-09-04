@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module ReplaceDefaultImports.ImportDefinition where
@@ -61,3 +62,15 @@ manyImportDefinitionsParser = do
   space
   normalDefinitions <- normalDefinitionsParser
   pure $ defaultDefinitions <> normalDefinitions
+
+printAlias :: Maybe Text -> Text
+printAlias (Just alias) = " as " <> alias
+printAlias Nothing = ""
+
+toJSImport :: ImportDefinition -> Text
+toJSImport Named{..} = _name <> printAlias _alias
+toJSImport Star{..} = "*" <> printAlias _alias
+toJSImport Anonimous = ""
+
+toJSImports :: [ImportDefinition] -> Text
+toJSImports = foldr (\definition acc -> (toJSImport definition) <> ", " <> acc) ""

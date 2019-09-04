@@ -16,7 +16,6 @@ import RenameFile (renameToTs)
 import InplacePatterns (
   addComponentGenericsStub
   , replaceExportDefaultSingletons
-  , replaceDefaultImports
   , replaceExtendObservable
   , addTslintDisabled
   )

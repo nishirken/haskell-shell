@@ -8,7 +8,7 @@ import Text.Megaparsec (parse)
 import ExportSingletons (exportSingletonsParser)
 
 exportSingletonsSpec :: Spec
-exportSingletonsSpec = describe "ExportSingletonsSpec" $ do
+exportSingletonsSpec = describe "ExportSingletons" $ do
   it "first" $ do
     let
       testStr = "export default new Manager();"

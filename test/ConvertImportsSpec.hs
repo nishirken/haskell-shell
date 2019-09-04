@@ -6,7 +6,7 @@ import Test.Hspec (describe, context, it, Spec, shouldBe)
 import ConvertImports
 
 convertImportsSpec :: Spec
-convertImportsSpec = describe "ConvertImportsSpec" $ do
+convertImportsSpec = describe "ConvertImports" $ do
   it "prepareRelativePaths" $ do
     let
       testData =

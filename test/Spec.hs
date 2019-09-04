@@ -6,6 +6,8 @@ import InplacePatternsSpec (inplacePatternsSpec)
 import ExportSingletonsSpec (exportSingletonsSpec)
 import ExtendObservableSpec (extendObservableSpec)
 import ReplaceDefaultImportsSpec.StatementSpec (statementSpec)
+import ReplaceDefaultImportsSpec.ExportDefinitionSpec (exportDefinitionSpec)
+import ReplaceDefaultImportsSpec.ImportDefinitionSpec (importDefinitionSpec)
 
 main :: IO ()
 main = hspec $ do
@@ -15,3 +17,5 @@ main = hspec $ do
   exportSingletonsSpec
   extendObservableSpec
   statementSpec
+  exportDefinitionSpec
+  importDefinitionSpec

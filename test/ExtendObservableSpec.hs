@@ -11,7 +11,7 @@ import Text.RawString.QQ (r)
 import ExtendObservable
 
 extendObservableSpec :: Spec
-extendObservableSpec = describe "ExtendObservableSpec" $ do
+extendObservableSpec = describe "ExtendObservable" $ do
   it "classParser" $ do
     let
       testStr = [r|

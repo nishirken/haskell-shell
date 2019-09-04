@@ -5,6 +5,7 @@ module ReplaceDefaultImports.ExportDefinition where
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Data.Text (Text, pack)
+import Data.Maybe (fromMaybe)
 import Common (Parser)
 import ReplaceDefaultImports.Common (applicationParser, functionBodyParser, typeParser)
 
@@ -70,3 +71,6 @@ exportDefinitionParser =
   <|> try exportFunctionParser
   <|> try exportConstParser
   <|> exportLambdaParser
+
+toJSExport :: ExportDefinition -> Text -> Text
+toJSExport (Class name) defaultName = "export class " <> (fromMaybe defaultName name)

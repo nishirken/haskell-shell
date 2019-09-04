@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module ReplaceDefaultImports.Statement where
@@ -11,8 +12,10 @@ import ReplaceDefaultImports.ImportDefinition
   , defaultDefinitionParser
   , normalDefinitionsParser
   , manyImportDefinitionsParser
+  , toJSImport
+  , toJSImports
   )
-import ReplaceDefaultImports.ExportDefinition (ExportDefinition (..), exportDefinitionParser)
+import ReplaceDefaultImports.ExportDefinition (ExportDefinition (..), exportDefinitionParser, toJSExport)
 import ReplaceDefaultImports.Common
   ( applicationParser
   , functionBodyParser
@@ -82,3 +85,11 @@ statementParser :: Parser [Statement]
 statementParser = do
   statements <- some $ try importParser <|> try anonimousImportParser <|> try exportFromParser <|> try exportParser
   pure statements
+
+toJSStatement :: Statement -> Text
+toJSStatement Import{..} = let isSingleDefault Named{..} = _isDefault in
+  if length _definitions == 1 && isSingleDefault (head _definitions)
+  then "import " <> toJSImport (head _definitions) <> " "
+  else "import { " <> toJSImports _definitions <> " } "
+toJSStatement ExportFrom{..} = "export { " <> toJSImports _definitions <> " } "
+toJSStatement (Export definition isDefault) = toJSExport definition ""
