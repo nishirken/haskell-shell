@@ -214,7 +214,7 @@ statementSpec = describe "Parser" $ do
         expect = Export Lambda True
       parse exportParser "" testStr `shouldParse` expect
 
-  context "context" $ do
+  context "All together" $ do
     let
       testStr = [r|
         import { StateClass, AnotherClass as Another, default as State } from 'folder/file';
