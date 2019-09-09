@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module InplacePatternsSpec where
 
 import Test.Hspec (describe, it, Spec, shouldBe)
 import InplacePatterns
+import TestUtils
 
 inplacePatternsSpec :: Spec
 inplacePatternsSpec = describe "InplacePatterns" $ do

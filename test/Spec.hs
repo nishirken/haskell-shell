@@ -8,6 +8,7 @@ import ExtendObservableSpec (extendObservableSpec)
 import ReplaceDefaultImportsSpec.StatementSpec (statementSpec)
 import ReplaceDefaultImportsSpec.ExportDefinitionSpec (exportDefinitionSpec)
 import ReplaceDefaultImportsSpec.ImportDefinitionSpec (importDefinitionSpec)
+import ReplaceDefaultImportsSpec.ReplaceSpec (replaceSpec)
 
 main :: IO ()
 main = hspec $ do
@@ -19,3 +20,4 @@ main = hspec $ do
   statementSpec
   exportDefinitionSpec
   importDefinitionSpec
+  replaceSpec
