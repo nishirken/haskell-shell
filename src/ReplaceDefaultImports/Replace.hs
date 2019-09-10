@@ -63,14 +63,17 @@ parseOne path = do
   content <- Text.pack <$> StrictIO.readFile (encodeString path)
   pure $ (path, fromRight [] $ parse statementParser (encodeString path) content)
 
+resolveAndMakeAbsoluteImportPath :: FilePath -> FilePath -> IO FilePath
+resolveAndMakeAbsoluteImportPath currentPath importPath = pure currentPath
+
 replaceDefaultImports :: [FilePath] -> IO ()
 replaceDefaultImports paths = do
-  projectPath <- getProjectPath
-  parsed <- traverse parseOne paths
+  filesStatements <- traverse parseOne paths
   let
-    statements = map (\(path, x) -> (projectPath </> path, x)) parsed
-    defaultImportMap = makeDefaultImportsMap statements
-    exportFromMap = makeExportFromMap statements
-    exportMap = makeExportMap statements
-  print $ foldr (max . (\(ImportStatements xs) -> length xs) . snd) 0 $ M.toList defaultImportMap
+    defaultImportMap :: M.Map FilePath ImportStatements
+    defaultImportMap = makeDefaultImportsMap filesStatements
+    exportFromMap :: M.Map FilePath ExportFromStatements
+    exportFromMap = makeExportFromMap filesStatements
+    exportMap :: M.Map FilePath ExportStatements
+    exportMap = makeExportMap filesStatements
   pure ()

@@ -12,13 +12,13 @@ import Data.Text (Text, pack, unpack, isSuffixOf)
 import Data.Maybe (fromJust)
 import Control.Monad (forM)
 
-basePath :: FilePath
-basePath = "./test/testFiles/"
+baseTestFilesPath :: FilePath
+baseTestFilesPath = "./test/testFiles/"
 
 testOnFiles :: FilePath -> FilePath -> (Turtle.FilePath -> IO ()) -> IO ()
 testOnFiles testFile expectFile f = do
-  let testPath = basePath </> testFile
-  let expectPath = basePath </> expectFile
+  let testPath = baseTestFilesPath </> testFile
+  let expectPath = baseTestFilesPath </> expectFile
   initialContent <- StrictIO.readFile $ testPath
   expectContent <- StrictIO.readFile $ expectPath
   f $ Turtle.fromString testPath

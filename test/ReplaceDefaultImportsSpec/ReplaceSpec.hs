@@ -14,7 +14,7 @@ import Control.Monad (forM, forM_)
 import System.Directory (getDirectoryContents)
 import ProcessPaths (collectFilePaths)
 
-initialFolder = basePath </> "ChangeUser"
+initialFolder = baseTestFilesPath </> "ChangeUser"
 
 data TestFile = TestFile
   { _originalContent :: T.Text
@@ -48,4 +48,7 @@ replaceSpec = describe "Replace" $ do
         (\path -> (isExtensionOf "ts" path || isExtensionOf "tsx" path) && (not . T.isSuffixOf ".expect" . T.pack . dropExtension) path) testPaths
     forM originalPaths makeTestFile)
   runIO $ replaceDefaultImports $ map (\TestFile{..} -> Turtle.decodeString _path) testPaths
+
   forM_ testPaths testOnFile
+
+  runIO $ forM_ testPaths recoverFile

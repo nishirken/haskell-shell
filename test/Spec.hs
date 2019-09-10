@@ -9,6 +9,7 @@ import ReplaceDefaultImportsSpec.StatementSpec (statementSpec)
 import ReplaceDefaultImportsSpec.ExportDefinitionSpec (exportDefinitionSpec)
 import ReplaceDefaultImportsSpec.ImportDefinitionSpec (importDefinitionSpec)
 import ReplaceDefaultImportsSpec.ReplaceSpec (replaceSpec)
+import ReplaceDefaultImportsSpec.ResolveImportsSpec (resolveImportsSpec)
 
 main :: IO ()
 main = hspec $ do
@@ -21,3 +22,4 @@ main = hspec $ do
   exportDefinitionSpec
   importDefinitionSpec
   replaceSpec
+  resolveImportsSpec
