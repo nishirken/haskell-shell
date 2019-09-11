@@ -12,8 +12,11 @@ import qualified Data.Map.Strict as M
 import qualified System.IO.Strict as StrictIO
 import Data.Either (fromRight)
 import System.Directory (doesDirectoryExist, doesFileExist)
+import System.FilePath.Posix (takeDirectory)
 import ReplaceDefaultImports.Statement (Statement (..), statementParser)
 import ReplaceDefaultImports.ImportDefinition (ImportDefinition (..))
+import Data.List (find)
+import Control.Monad (forM_)
 
 newtype ImportStatements = ImportStatements [Statement] deriving (Eq, Show)
 newtype ExportFromStatements = ExportFromStatements [Statement] deriving (Eq, Show)
@@ -68,18 +71,28 @@ resolveAndMakeAbsoluteImportPath :: FilePath -> FilePath -> IO FilePath
 resolveAndMakeAbsoluteImportPath currentPath importPath = do
   let
     isAbsolute = not $ Text.isPrefixOf "./" (Text.pack $ Turtle.encodeString importPath)
-    targetPath = currentPath </>
-      if isAbsolute then importPath else (Turtle.fromText $ Text.replace "./" "" (Text.pack $ Turtle.encodeString importPath))
+    indexPath = importPath </> "index.ts"
+    targetPath = (Turtle.decodeString $ takeDirectory $ Turtle.encodeString currentPath) </> (Turtle.fromText $ Text.replace "./" "" (Text.pack $ Turtle.encodeString $ importPath))
     withExtension = do
       let
         tsPath = targetPath <.> "ts"
         tsxPath = targetPath <.> "tsx"
       isTsExists <- doesFileExist $ Turtle.encodeString tsPath
       pure $ if isTsExists then tsPath else tsxPath
-    indexPath = targetPath </> "index.ts"
   isDirectory <- doesDirectoryExist $ Turtle.encodeString targetPath
-  print (isDirectory, targetPath)
   if isDirectory then pure indexPath else withExtension
+
+lookupImport :: Statement -> FilePath -> M.Map FilePath ExportFromStatements -> M.Map FilePath ExportStatements -> IO Statement
+lookupImport x@Import{..} currentPath exportFrom export = do
+  targetPath <- resolveAndMakeAbsoluteImportPath currentPath $ Turtle.fromText _path
+  case M.lookup targetPath exportFrom of
+    (Just (ExportFromStatements exportFromStatements)) ->
+      case find (\ExportFrom{..} -> _isDefault) exportFromStatements of
+        (Just Named{..}) -> 
+    Nothing -> case M.lookup targetPath export of
+      (Just (ExportStatements exportStatements)) -> find (\)
+      Nothing -> error $ "Nothing was for: " <> show x <> currentPath
+  pure x
 
 replaceDefaultImports :: [FilePath] -> IO ()
 replaceDefaultImports paths = do
@@ -87,8 +100,13 @@ replaceDefaultImports paths = do
   let
     defaultImportMap :: M.Map FilePath ImportStatements
     defaultImportMap = makeDefaultImportsMap filesStatements
+    importAssocs :: [(FilePath, ImportStatements)]
+    importAssocs = M.assocs defaultImportMap
     exportFromMap :: M.Map FilePath ExportFromStatements
     exportFromMap = makeExportFromMap filesStatements
     exportMap :: M.Map FilePath ExportStatements
     exportMap = makeExportMap filesStatements
+  forM_
+    importAssocs
+    (\(path, (ImportStatements statements)) -> forM_ statements (\statement -> lookupImport statement path)) 
   pure ()
