@@ -69,7 +69,7 @@ resolveAndMakeAbsoluteImportPath currentPath importPath = do
   let
     isAbsolute = not $ Text.isPrefixOf "./" (Text.pack $ Turtle.encodeString importPath)
     targetPath = currentPath </>
-      if isAbsolute then importPath else (Turtle.fromText $ Text.replace "./" (Text.pack $ Turtle.encodeString importPath) "")
+      if isAbsolute then importPath else (Turtle.fromText $ Text.replace "./" "" (Text.pack $ Turtle.encodeString importPath))
     withExtension = do
       let
         tsPath = targetPath <.> "ts"

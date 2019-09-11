@@ -48,6 +48,6 @@ resolveImportsSpec = describe "ResolveImports" $ do
 
     it "components ChangeUserForm" $ do
       path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder Turtle.</> "components") "./ChangeUserForm/ChangeUserForm"
-      path `shouldBe` expectPath"components/ChangeUserForm.tsx"
+      path `shouldBe` expectPath"components/ChangeUserForm/ChangeUserForm.tsx"
 
   runIO $ Turtle.cd projectPath
