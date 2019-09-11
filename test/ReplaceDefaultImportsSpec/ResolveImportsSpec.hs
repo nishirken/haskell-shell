@@ -27,27 +27,27 @@ resolveImportsSpec = describe "ResolveImports" $ do
 
     it "containers ChangeUserState" $ do
       path <- resolveAndMakeAbsoluteImportPath turtleInitialFolder "containers/ChangeUserState"
-      path `shouldBe` initialFolder </> "containers/ChangeUserState.ts"
+      path `shouldBe` expectPath "containers/ChangeUserState.ts"
     
     it "containers ChangeUserContainer" $ do
       path <- resolveAndMakeAbsoluteImportPath turtleInitialFolder "containers/ChangeUserContainer"
-      path `shouldBe` initialFolder </> "containers/ChangeUserContainer.ts"
+      path `shouldBe` expectPath "containers/ChangeUserContainer.ts"
 
     it "components ChangeUserForm" $ do
       path <- resolveAndMakeAbsoluteImportPath turtleInitialFolder "components/ChangeUserForm/ChangeUserForm"
-      path `shouldBe` initialFolder </> "components/ChangeUserForm/ChangeUserForm.tsx"
+      path `shouldBe` expectPath "components/ChangeUserForm/ChangeUserForm.tsx"
 
     it "components index" $ do
       path <- resolveAndMakeAbsoluteImportPath turtleInitialFolder "components/ChangeUserForm"
-      path `shouldBe` initialFolder </> "components/ChangeUserForm/index.ts"
+      path `shouldBe` expectPath "components/ChangeUserForm/index.ts"
 
   context "currentPath is absolute and importPath is relative" $ do
     it "containers ChangeUserContainer" $ do
-      path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder </> "containers") "./ChangeUserContainer"
-      path `shouldBe` initialFolder </> "containers/ChangeUserContainer.ts"
+      path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder Turtle.</> "containers") "./ChangeUserContainer"
+      path `shouldBe` expectPath "containers/ChangeUserContainer.ts"
 
     it "components ChangeUserForm" $ do
-      path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder </> "components") "./ChangeUserForm/ChangeUserForm"
-      path `shouldBe` initialFolder </> "components/ChangeUserForm.tsx"
+      path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder Turtle.</> "components") "./ChangeUserForm/ChangeUserForm"
+      path `shouldBe` expectPath"components/ChangeUserForm.tsx"
 
   runIO $ Turtle.cd projectPath

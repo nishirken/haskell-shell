@@ -11,6 +11,7 @@ import qualified Data.Text as Text
 import qualified Data.Map.Strict as M
 import qualified System.IO.Strict as StrictIO
 import Data.Either (fromRight)
+import System.Directory (doesDirectoryExist, doesFileExist)
 import ReplaceDefaultImports.Statement (Statement (..), statementParser)
 import ReplaceDefaultImports.ImportDefinition (ImportDefinition (..))
 
@@ -64,7 +65,21 @@ parseOne path = do
   pure $ (path, fromRight [] $ parse statementParser (encodeString path) content)
 
 resolveAndMakeAbsoluteImportPath :: FilePath -> FilePath -> IO FilePath
-resolveAndMakeAbsoluteImportPath currentPath importPath = pure currentPath
+resolveAndMakeAbsoluteImportPath currentPath importPath = do
+  let
+    isAbsolute = not $ Text.isPrefixOf "./" (Text.pack $ Turtle.encodeString importPath)
+    targetPath = currentPath </>
+      if isAbsolute then importPath else (Turtle.fromText $ Text.replace "./" (Text.pack $ Turtle.encodeString importPath) "")
+    withExtension = do
+      let
+        tsPath = targetPath <.> "ts"
+        tsxPath = targetPath <.> "tsx"
+      isTsExists <- doesFileExist $ Turtle.encodeString tsPath
+      pure $ if isTsExists then tsPath else tsxPath
+    indexPath = targetPath </> "index.ts"
+  isDirectory <- doesDirectoryExist $ Turtle.encodeString targetPath
+  print (isDirectory, targetPath)
+  if isDirectory then pure indexPath else withExtension
 
 replaceDefaultImports :: [FilePath] -> IO ()
 replaceDefaultImports paths = do
