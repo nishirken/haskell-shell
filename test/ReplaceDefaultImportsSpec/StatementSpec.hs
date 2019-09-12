@@ -231,6 +231,8 @@ statementSpec = describe "Parser" $ do
 
         export default new SomeClass({ fields });
 
+        export default new AnotherClass();
+
         export default class Component {
 
         }
@@ -239,10 +241,16 @@ statementSpec = describe "Parser" $ do
 
         }
 
+        class Class {}
+
         export default () => ({
           field: 1,
           field: 2,
         });
+
+        function f() {
+          
+        }
 
         export function f(): null {
           return null;
@@ -274,6 +282,7 @@ statementSpec = describe "Parser" $ do
         , Import [Anonimous] "library"
         , Export (Const "Url") False
         , Export (ObjectCreation "SomeClass") True
+        , Export (ObjectCreation "AnotherClass") True
         , Export (Class (Just "Component")) True
         , Export (Class Nothing) True
         , Export Lambda True
@@ -294,7 +303,7 @@ statementSpec = describe "Parser" $ do
         ]
     it "length" $ (length <$> parse statementParser "" testStr) `shouldBe` (Right $ length expect)
     it "compare parse" $ parse statementParser "" testStr `shouldParse` expect
-  it "from file" $ do
+  it "from file 1" $ do
     content <- pack <$> readFile "./test/testFiles/paths/component.tsx"
     let
       expect =
@@ -315,5 +324,14 @@ statementSpec = describe "Parser" $ do
         , Import [Named "formatPhone" Nothing False] "services/utils"
         , Export (Const "api") False
         , Export (Class (Just "State")) True
+        ]
+    parse statementParser "" content `shouldParse` expect
+  it "from file 2" $ do
+    content <- pack <$> readFile "./test/testFiles/ChangeUser/containers/ChangeUserState.ts"
+    let
+      expect =
+        [ Import [Named "observable" Nothing False, Named "runInAction" Nothing False] "mobx"
+        , Import [Named "result" Nothing False] "lodash" 
+        , Export (ObjectCreation "ChangeUserState") True
         ]
     parse statementParser "" content `shouldParse` expect

@@ -83,8 +83,9 @@ exportParser = do
 
 statementParser :: Parser [Statement]
 statementParser = do
-  statements <- some $ try importParser <|> try anonimousImportParser <|> try exportFromParser <|> try exportParser
-  pure statements
+  xs <- many $ try importParser <|> try anonimousImportParser <|> try exportFromParser
+  ys <- many $ try exportParser
+  pure $ xs <> ys
 
 toJSStatement :: Statement -> Text
 toJSStatement Import{..} = let isSingleDefault Named{..} = _isDefault in

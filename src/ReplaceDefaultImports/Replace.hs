@@ -102,22 +102,23 @@ lookupImport ::
   -> M.Map FilePath ExportStatements
   -> IO Statement
 lookupImport x@Named{..} importPath currentPath exportFromMap exportMap = do
-  let err x = error $ "Nothing founded in: " <> x <> show x <> show currentPath
+  let err msg = error $ "Nothing founded in: " <> msg <> show x <> show currentPath
   targetPath <- resolveAndMakeAbsoluteImportPath currentPath importPath
-  case M.lookup targetPath exportFromMap of
-    (Just (ExportFromStatements exportFromStatements)) ->
-      case Data.List.find (\Named{..} -> _isDefault) (concatMap (\ExportFrom{..} -> _definitions) exportFromStatements) of
-        (Just x) -> lookupImport x importPath targetPath exportFromMap exportMap
-        Nothing -> err "exportFromMap"
-    Nothing -> case M.lookup targetPath exportMap of
-      (Just (ExportStatements exportStatements)) -> case Data.List.find (\(Export _ isDefault) -> isDefault) exportStatements of
+  case M.lookup targetPath exportMap of
+    (Just (ExportStatements exportStatements)) -> case Data.List.find (\(Export _ isDefault) -> isDefault) exportStatements of
         (Just x) -> pure x
         Nothing -> err "export statements"
+    Nothing -> case M.lookup targetPath exportFromMap of
+      (Just (ExportFromStatements exportFromStatements)) ->
+        case Data.List.find (\Named{..} -> _isDefault) (concatMap (\ExportFrom{..} -> _definitions) exportFromStatements) of
+        (Just x) -> lookupImport x importPath targetPath exportFromMap exportMap
+        Nothing -> err "exportFromMap"
       Nothing -> err "exportMap"
 
 replaceDefaultImports :: [FilePath] -> IO ()
 replaceDefaultImports paths = do
   filesStatements <- traverse parseOne paths
+  -- print filesStatements
   let
     defaultImportMap :: M.Map FilePath ImportStatements
     defaultImportMap = makeDefaultImportsMap filesStatements
