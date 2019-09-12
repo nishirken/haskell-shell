@@ -7,7 +7,6 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import Data.Text (Text, pack)
 import Common (Parser)
-
 data ImportDefinition
   = Named
     { _name :: Text

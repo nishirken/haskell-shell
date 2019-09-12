@@ -23,31 +23,43 @@ newtype ExportFromStatements = ExportFromStatements [Statement] deriving (Eq, Sh
 newtype ExportStatements = ExportStatements [Statement] deriving (Eq, Show)
 
 isScriptFile :: Statement -> Bool
-isScriptFile Import{..} = not . or $ map (\x -> Text.isSuffixOf x _path)
-  [ ".scss"
-  , ".css"
-  , ".svg"
-  , ".png"
-  , ".jpg"
-  ]
+isScriptFile statement =
+  let
+    extensions =
+      [ ".scss"
+      , ".css"
+      , ".svg"
+      , ".png"
+      , ".jpg"
+      ]
+    f path = not . or $ map (\x -> Text.isSuffixOf x path) extensions in case statement of
+      Import{..} -> f _path
+      ExportFrom{..} -> f _path
+      _ -> False
 
 isProjectPath :: Statement -> Bool
-isProjectPath Import{..} = any (`Text.isPrefixOf` _path)
-  [ "const"
-  , "controls"
-  , "hoc"
-  , "layouts"
-  , "routes"
-  , "services"
-  , "styles/variables"
-  , "state"
-  , "store"
-  , "widgets"
-  , "./"
-  ]
+isProjectPath statement = case statement of
+  Import{..} -> any (`Text.isPrefixOf` _path)
+    [ "const"
+    , "controls"
+    , "hoc"
+    , "layouts"
+    , "routes"
+    , "services"
+    , "styles/variables"
+    , "state"
+    , "store"
+    , "widgets"
+    , "./"
+    ]
+  _ -> False
 
 hasDefault :: Statement -> Bool
-hasDefault Import{..} = or [ _isDefault | Named{..} <- _definitions ]
+hasDefault statement = let f definitions = or [ _isDefault | Named{..} <- definitions ] in
+  case statement of
+    Import{..} -> f _definitions
+    ExportFrom{..} -> f _definitions
+    (Export _ isDefault) -> isDefault
 
 makeDefaultImportsMap :: [(FilePath, [Statement])] -> M.Map FilePath ImportStatements
 makeDefaultImportsMap xs = M.fromList $
@@ -82,17 +94,26 @@ resolveAndMakeAbsoluteImportPath currentPath importPath = do
   isDirectory <- doesDirectoryExist $ Turtle.encodeString targetPath
   if isDirectory then pure indexPath else withExtension
 
-lookupImport :: Statement -> FilePath -> M.Map FilePath ExportFromStatements -> M.Map FilePath ExportStatements -> IO Statement
-lookupImport x@Import{..} currentPath exportFrom export = do
-  targetPath <- resolveAndMakeAbsoluteImportPath currentPath $ Turtle.fromText _path
-  case M.lookup targetPath exportFrom of
+lookupImport ::
+  ImportDefinition
+  -> FilePath
+  -> FilePath
+  -> M.Map FilePath ExportFromStatements
+  -> M.Map FilePath ExportStatements
+  -> IO Statement
+lookupImport x@Named{..} importPath currentPath exportFromMap exportMap = do
+  let err x = error $ "Nothing founded in: " <> x <> show x <> show currentPath
+  targetPath <- resolveAndMakeAbsoluteImportPath currentPath importPath
+  case M.lookup targetPath exportFromMap of
     (Just (ExportFromStatements exportFromStatements)) ->
-      case find (\ExportFrom{..} -> _isDefault) exportFromStatements of
-        (Just Named{..}) -> 
-    Nothing -> case M.lookup targetPath export of
-      (Just (ExportStatements exportStatements)) -> find (\)
-      Nothing -> error $ "Nothing was for: " <> show x <> currentPath
-  pure x
+      case Data.List.find (\Named{..} -> _isDefault) (concatMap (\ExportFrom{..} -> _definitions) exportFromStatements) of
+        (Just x) -> lookupImport x importPath targetPath exportFromMap exportMap
+        Nothing -> err "exportFromMap"
+    Nothing -> case M.lookup targetPath exportMap of
+      (Just (ExportStatements exportStatements)) -> case Data.List.find (\(Export _ isDefault) -> isDefault) exportStatements of
+        (Just x) -> pure x
+        Nothing -> err "export statements"
+      Nothing -> err "exportMap"
 
 replaceDefaultImports :: [FilePath] -> IO ()
 replaceDefaultImports paths = do
@@ -108,5 +129,9 @@ replaceDefaultImports paths = do
     exportMap = makeExportMap filesStatements
   forM_
     importAssocs
-    (\(path, (ImportStatements statements)) -> forM_ statements (\statement -> lookupImport statement path)) 
+    (\(path, (ImportStatements statements)) ->
+      traverse
+      (\Import{..} -> forM_ _definitions (\definition ->
+        lookupImport definition (Turtle.fromText _path) path exportFromMap exportMap))
+      statements)
   pure ()
