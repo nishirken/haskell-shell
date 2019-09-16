@@ -33,6 +33,7 @@ data Statement
     , _path :: Text
     }
   | Export ExportDefinition Bool
+  | Skip Char
   deriving (Eq, Show)
 
 pathParser :: Parser Text
@@ -81,11 +82,20 @@ exportParser = do
   definition <- exportDefinitionParser
   pure $ Export definition (isJust isDefault)
 
+skipParser :: Parser Statement
+skipParser = Skip <$> (try printChar <|> newline)
+
 statementParser :: Parser [Statement]
 statementParser = do
-  xs <- many $ try importParser <|> try anonimousImportParser <|> try exportFromParser
-  ys <- many $ try exportParser
-  pure $ xs <> ys
+  xs <- some $ try importParser
+    <|> try anonimousImportParser
+    <|> try exportFromParser
+    <|> try exportParser
+    <|> skipParser
+  let
+    f (Skip _) = False
+    f _ = True
+  pure $ filter f xs
 
 toJSStatement :: Statement -> Text
 toJSStatement Import{..} = let isSingleDefault Named{..} = _isDefault in
