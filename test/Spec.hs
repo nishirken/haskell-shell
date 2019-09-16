@@ -21,5 +21,5 @@ main = hspec $ do
   statementSpec
   exportDefinitionSpec
   importDefinitionSpec
-  -- replaceSpec
-  -- resolveImportsSpec
+  replaceSpec
+  resolveImportsSpec

@@ -83,14 +83,16 @@ resolveAndMakeAbsoluteImportPath :: FilePath -> FilePath -> IO FilePath
 resolveAndMakeAbsoluteImportPath currentPath importPath = do
   let
     isAbsolute = not $ Text.isPrefixOf "./" (Text.pack $ Turtle.encodeString importPath)
-    indexPath = importPath </> "index.ts"
-    targetPath = (Turtle.decodeString $ takeDirectory $ Turtle.encodeString currentPath) </> (Turtle.fromText $ Text.replace "./" "" (Text.pack $ Turtle.encodeString $ importPath))
+    justPathName = Turtle.fromText $ Text.replace "./" "" (Text.pack $ Turtle.encodeString $ importPath)
+    targetPath = currentPath </> justPathName
+    indexPath = targetPath </> "index.ts"
     withExtension = do
       let
         tsPath = targetPath <.> "ts"
         tsxPath = targetPath <.> "tsx"
       isTsExists <- doesFileExist $ Turtle.encodeString tsPath
       pure $ if isTsExists then tsPath else tsxPath
+  print targetPath
   isDirectory <- doesDirectoryExist $ Turtle.encodeString targetPath
   if isDirectory then pure indexPath else withExtension
 
