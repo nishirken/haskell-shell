@@ -43,11 +43,11 @@ resolveImportsSpec = describe "ResolveImports" $ do
 
   context "currentPath is absolute and importPath is relative" $ do
     it "containers ChangeUserContainer" $ do
-      path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder Turtle.</> "containers") "./ChangeUserContainer"
-      path `shouldBe` expectPath "containers/ChangeUserContainer.ts"
+      path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder Turtle.</> "containers/ChangeUserContainer.ts") "./ChangeUserState.ts"
+      path `shouldBe` expectPath "containers/ChangeUserState.ts"
 
-    it "components ChangeUserForm" $ do
-      path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder Turtle.</> "components") "./ChangeUserForm/ChangeUserForm"
-      path `shouldBe` expectPath"components/ChangeUserForm/ChangeUserForm.tsx"
+    it "components ChangeUserForm 2" $ do
+      path <- resolveAndMakeAbsoluteImportPath (turtleInitialFolder Turtle.</> "components/ChangeUserContainer.ts") "./ChangeUserForm/ChangeUserForm"
+      path `shouldBe` expectPath "components/ChangeUserForm/ChangeUserForm.tsx"
 
   runIO $ Turtle.cd projectPath

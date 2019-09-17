@@ -3,7 +3,7 @@
 
 module ReplaceDefaultImports.Replace where
 
-import Turtle
+import Turtle hiding (hasExtension)
 import Prelude hiding (FilePath)
 import Text.Megaparsec (parse)
 import ProcessPaths (getProjectPath)
@@ -12,7 +12,7 @@ import qualified Data.Map.Strict as M
 import qualified System.IO.Strict as StrictIO
 import Data.Either (fromRight)
 import System.Directory (doesDirectoryExist, doesFileExist)
-import System.FilePath.Posix (takeDirectory)
+import System.FilePath.Posix (takeDirectory, hasExtension)
 import ReplaceDefaultImports.Statement (Statement (..), statementParser)
 import ReplaceDefaultImports.ImportDefinition (ImportDefinition (..))
 import Data.List (find)
@@ -84,15 +84,15 @@ resolveAndMakeAbsoluteImportPath currentPath importPath = do
   let
     isAbsolute = not $ Text.isPrefixOf "./" (Text.pack $ Turtle.encodeString importPath)
     justPathName = Turtle.fromText $ Text.replace "./" "" (Text.pack $ Turtle.encodeString $ importPath)
-    targetPath = currentPath </> justPathName
+    oneFolderBack = (Turtle.decodeString . takeDirectory . Turtle.encodeString) currentPath
+    targetPath = if isAbsolute then currentPath </> importPath else oneFolderBack </> justPathName
     indexPath = targetPath </> "index.ts"
     withExtension = do
       let
         tsPath = targetPath <.> "ts"
         tsxPath = targetPath <.> "tsx"
       isTsExists <- doesFileExist $ Turtle.encodeString tsPath
-      pure $ if isTsExists then tsPath else tsxPath
-  print targetPath
+      pure $ if hasExtension (Turtle.encodeString targetPath) then targetPath else (if isTsExists then tsPath else tsxPath)
   isDirectory <- doesDirectoryExist $ Turtle.encodeString targetPath
   if isDirectory then pure indexPath else withExtension
 
@@ -120,7 +120,6 @@ lookupImport x@Named{..} importPath currentPath exportFromMap exportMap = do
 replaceDefaultImports :: [FilePath] -> IO ()
 replaceDefaultImports paths = do
   filesStatements <- traverse parseOne paths
-  -- print filesStatements
   let
     defaultImportMap :: M.Map FilePath ImportStatements
     defaultImportMap = makeDefaultImportsMap filesStatements
@@ -135,6 +134,6 @@ replaceDefaultImports paths = do
     (\(path, (ImportStatements statements)) ->
       traverse
       (\Import{..} -> forM_ _definitions (\definition ->
-        lookupImport definition (Turtle.fromText _path) path exportFromMap exportMap))
+        lookupImport definition (Turtle.fromText _path) path exportFromMap exportMap >>= print))
       statements)
   pure ()
