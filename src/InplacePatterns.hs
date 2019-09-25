@@ -21,11 +21,7 @@ textLinesFromFile path = do
   pure $ (Text.lines . Text.pack) content
 
 replace :: FilePath -> IO ()
-replace path = do
-  isJsx <- isJsxFile path
-  pure ()
-    where
-      exportDefaultPattern = begins ("export default " *> pure "export ")
+replace = inplace (begins ("export default " *> pure "export "))
 
 replaceExportDefaultFrom :: FilePath -> IO ()
 replaceExportDefaultFrom path =
