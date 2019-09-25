@@ -7,7 +7,7 @@ import Test.Hspec (describe, it, Spec, context)
 import Test.Hspec.Megaparsec (shouldParse)
 import Text.Megaparsec (parse)
 import Text.RawString.QQ (r)
-import PropTypes.Definition (PropType (..))
+import PropTypes.Statement (PropType (..))
 import PropTypes.Parser (propTypeParser)
 
 propTypesSpec :: Spec

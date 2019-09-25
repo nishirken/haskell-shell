@@ -1,4 +1,4 @@
-module PropTypes.Definition where
+module PropTypes.Statement where
 
 import Data.Text (Text)
 
@@ -24,7 +24,7 @@ data PropType
   | NotSupported
   deriving (Eq, Show)
 
-data PropTypeDefinition = PropTypeDefinition
+data PropTypeStatement = PropTypeStatement
   { _name :: Text
   , _type :: PropType
   , _isRequired :: Bool
