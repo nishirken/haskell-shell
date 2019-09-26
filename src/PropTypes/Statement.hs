@@ -16,16 +16,20 @@ data PropType
   | ElementType
   | InstanceOf Text
   | OneOf [Text]
-  | OneOfType [PropType]
-  | ArrayOf PropType
-  | ObjectOf PropType
-  | Shape [(Text, PropType)]
-  | Exact [(Text, PropType)]
+  | OneOfType [PropTypeStatement]
+  | ArrayOf PropTypeStatement
+  | ObjectOf PropTypeStatement
+  | Shape [(Text, PropTypeStatement)]
+  | Exact [(Text, PropTypeStatement)]
   | NotSupported
   deriving (Eq, Show)
 
 data PropTypeStatement = PropTypeStatement
-  { _name :: Text
-  , _type :: PropType
+  { _type :: PropType
   , _isRequired :: Bool
+  } deriving (Eq, Show)
+
+data StaticPropType = StaticPropType
+  { _originalText :: Text
+  , _statements :: [(Text, PropTypeStatement)]
   } deriving (Eq, Show)

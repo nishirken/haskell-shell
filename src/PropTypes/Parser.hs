@@ -1,13 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
-module PropTypes.Parser (propTypeParser, propTypeStatementParser) where
+module PropTypes.Parser (propTypeParser, propTypeStatementsParser, objectOf, arrayOf) where
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Common (Parser)
 import Data.Text (Text, pack)
-import PropTypes.Statement (PropType (..), PropTypeStatement (..))
+import PropTypes.Statement (PropType (..), PropTypeStatement (..), StaticPropType (..))
 
 sc :: Parser ()
 sc = L.space space1 lineCmnt blockCmnt
@@ -27,9 +28,6 @@ comma = symbol ","
 dot :: Parser Text
 dot = symbol "."
 
-required :: Parser Text
-required = lexeme "isRequired"
-
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
@@ -43,54 +41,132 @@ stringName :: Parser String
 stringName =
   (between (symbol "'") (symbol "'") $ many alphaNumChar) <|> (between (symbol "\"") (symbol "\"") $ many alphaNumChar)
 
-arrayParser :: Parser [Text]
-arrayParser = do
+arrayOf :: Parser a -> Parser [a]
+arrayOf parser = do
   xs <- squareBrackets $ many $ do
-    x <- stringName <|> (lexeme $ some alphaNumChar)
-    c <- optional comma
-    case c of
-      (Just y) -> pure x
-      Nothing -> lookAhead $ symbol "]" >> pure x
-  pure $ pack <$> xs
+    x <- parser
+    try comma <|> ((skipMany $ spaceChar <|> newline) >> (lookAhead $ symbol "]"))
+    pure x
+  pure xs
+
+objectOf :: Parser a -> Parser [(Text, a)]
+objectOf parser = do
+  xs <- curlyBrackets $ many $ do
+    fieldName <- (lexeme $ some alphaNumChar) <|> lexeme stringName
+    symbol ":"
+    fieldValue <- parser
+    try comma <|> ((skipMany $ spaceChar <|> newline) >> (lookAhead $ symbol "}"))
+    pure (pack fieldName, fieldValue)
+  pure xs
 
 type PropTypeParser = Parser PropType
 
 anyP :: PropTypeParser
 anyP = string "any" >> pure Any
 
+boolP :: PropTypeParser
+boolP = string "bool" >> pure Bool
+
+numberP :: PropTypeParser
+numberP = string "number" >> pure Number
+
+stringP :: PropTypeParser
+stringP = string "string" >> pure String
+
 funcP:: PropTypeParser
 funcP = string "func" >> pure Func
 
-ofSomething :: Text -> Parser Text
-ofSomething keyword = do
+symbolP :: PropTypeParser
+symbolP = string "symbol" >> pure Symbol
+
+nodeP :: PropTypeParser
+nodeP = string "node" >> pure Node
+
+elementP :: PropTypeParser
+elementP = string "element" >> pure Element
+
+elementTypeP :: PropTypeParser
+elementTypeP = string "elementType" >> pure ElementType
+
+arrayP :: PropTypeParser
+arrayP = string "array" >> pure Array
+
+objectP :: PropTypeParser
+objectP = string "object" >> pure Object
+
+ofSomething :: Text -> Parser a -> Parser a
+ofSomething keyword parser = do
   string keyword
-  ofWhich <- parens $ some alphaNumChar 
-  pure $ pack ofWhich
+  ofWhich <- parens parser 
+  pure ofWhich
 
 instanceOfP :: PropTypeParser
-instanceOfP = InstanceOf <$> ofSomething "instanceOf"
+instanceOfP = InstanceOf <$> ofSomething "instanceOf" (pack <$> some alphaNumChar)
 
 oneOfP :: PropTypeParser
 oneOfP = do
   string "oneOf"
-  array <- parens arrayParser
-  pure $ OneOf array
+  array <- parens $ arrayOf $ stringName <|> (lexeme $ some alphaNumChar)
+  pure $ OneOf $ pack <$> array
 
--- oneOfType :: PropTypeParser
--- oneOfType = do
---   string "oneOfType"
---   array <- parens $ 
+oneOfTypeP :: PropTypeParser
+oneOfTypeP = do
+  xs <- ofSomething "oneOfType" (arrayOf propTypeParser)
+  pure $ OneOfType $ map (\PropTypeStatement{..} -> _type) xs
 
-propTypeParser :: PropTypeParser
+arrayOfP :: PropTypeParser
+arrayOfP = do
+  PropTypeStatement{..} <- ofSomething "arrayOf" propTypeParser
+  pure $ ArrayOf _type
+
+objectOfP :: PropTypeParser
+objectOfP = do
+  PropTypeStatement{..} <- ofSomething "objectOf" propTypeParser
+  pure $ ObjectOf _type
+
+shapeP :: PropTypeParser
+shapeP = do
+  string "shape"
+  xs <- parens $ objectOf propTypeParser
+  pure $ Shape $ map (\(name, PropTypeStatement{..}) -> (name, _type)) xs
+
+exactP :: PropTypeParser
+exactP = do
+  string "exact"
+  xs <- parens $ objectOf propTypeParser
+  pure $ Exact $ map (\(name, PropTypeStatement{..}) -> (name, _type)) xs
+
+notSupportedP :: PropTypeParser
+notSupportedP = pure NotSupported
+
+propTypeParser :: Parser PropTypeStatement
 propTypeParser = do
   optional $ lexeme . try $ string "PropTypes."
   propType <-
-    anyP
+    arrayOfP
+    <|> objectOfP
+    <|> arrayP
+    <|> objectP
+    <|> anyP
+    <|> boolP
+    <|> numberP
+    <|> stringP
+    <|> symbolP
     <|> funcP
+    <|> nodeP
+    <|> elementTypeP
+    <|> elementP
     <|> instanceOfP
+    <|> oneOfTypeP
     <|> oneOfP
-  optional $ dot >> required
-  pure propType
+    <|> shapeP
+    <|> exactP
+  isRequired <- optional $ char '.' >> string "isRequired"
+  pure $ PropTypeStatement propType (isRequired /= Nothing)
 
-propTypeStatementParser :: Parser PropTypeStatement
-propTypeStatementParser = undefined
+propTypeStatementsParser :: Parser [(Text, PropTypeStatement)]
+propTypeStatementsParser = do
+  lexeme "static"
+  lexeme "propTypes"
+  symbol "="
+  objectOf propTypeParser
