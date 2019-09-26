@@ -39,17 +39,17 @@ propTypesSpec = describe "PropTypes" $ do
     it "oneOf" $
       parse propTypeParser "" "PropTypes.oneOf([  'First', \"Second\"  ])" `shouldParse` PropTypeStatement (OneOf ["First", "Second"]) False
     it "oneOfType" $
-      parse propTypeParser "" "PropTypes.oneOfType([PropTypes.number, PropTypes.string])" `shouldParse` PropTypeStatement (OneOfType [Number, String]) False
+      parse propTypeParser "" "PropTypes.oneOfType([PropTypes.number, PropTypes.string])" `shouldParse` PropTypeStatement (OneOfType [PropTypeStatement Number False, PropTypeStatement String False]) False
     it "arrayOf" $
-      parse propTypeParser "" "PropTypes.arrayOf(PropTypes.string)" `shouldParse` PropTypeStatement (ArrayOf String) False
+      parse propTypeParser "" "PropTypes.arrayOf(PropTypes.string)" `shouldParse` PropTypeStatement (ArrayOf (PropTypeStatement String False)) False
     it "objectOf" $
-      parse propTypeParser "" "PropTypes.objectOf(PropTypes.string)" `shouldParse` PropTypeStatement (ObjectOf String) False
+      parse propTypeParser "" "PropTypes.objectOf(PropTypes.string)" `shouldParse` PropTypeStatement (ObjectOf (PropTypeStatement String False)) False
     it "shape" $
       parse
         propTypeParser
         ""
         "PropTypes.shape({ field1: PropTypes.string, field2: PropTypes.arrayOf(PropTypes.string) })"
-      `shouldParse` PropTypeStatement (Shape [("field1", String), ("field2", ArrayOf String)]) False
+      `shouldParse` PropTypeStatement (Shape [("field1", PropTypeStatement String False), ("field2", PropTypeStatement (ArrayOf (PropTypeStatement String False)) False)]) False
     it "exact" $ do
       let
         testStr = [r|PropTypes.exact({
@@ -62,9 +62,9 @@ propTypesSpec = describe "PropTypes" $ do
           })
         |]
         expect = PropTypeStatement (Exact
-          [ ("field1", Any)
-          , ("field2", ArrayOf String)
-          , ("field3", Shape [("field1", Number), ("field2", OneOf ["First", "Second"])])
+          [ ("field1", PropTypeStatement Any True)
+          , ("field2", PropTypeStatement (ArrayOf (PropTypeStatement String False)) False)
+          , ("field3", PropTypeStatement (Shape [("field1", PropTypeStatement Number False), ("field2", PropTypeStatement (OneOf ["First", "Second"]) False)]) False)
           ]) False
       parse propTypeParser "" testStr `shouldParse` expect
   context "statement parser" $ do
@@ -87,7 +87,8 @@ propTypesSpec = describe "PropTypes" $ do
           prop2: PropTypes.oneOf(['First', 'Second'])
         };|]
         expect =
-          [ ("prop1", PropTypeStatement (Shape [("field1", Number), ("field2", OneOf ["First", "Second"])]) True)
+          [ ("prop1", PropTypeStatement
+            (Shape [("field1", PropTypeStatement Number False), ("field2", PropTypeStatement (OneOf ["First", "Second"]) False)]) True)
           , ("prop2", PropTypeStatement (OneOf ["First", "Second"]) False)
           ]
       parse propTypeStatementsParser "" testStr `shouldParse` expect
@@ -171,12 +172,18 @@ propTypesSpec = describe "PropTypes" $ do
           , ("optionalElementType", PropTypeStatement ElementType False)
           , ("optionalMessage", PropTypeStatement (InstanceOf "Message") False)
           , ("optionalEnum", PropTypeStatement (OneOf ["News", "Photos"]) False)
-          , ("optionalUnion", PropTypeStatement (OneOfType [String, Number, InstanceOf "Message"]) False)
-          , ("optionalArrayOf", PropTypeStatement (ArrayOf Number) False)
-          , ("optionalObjectOf", PropTypeStatement (ObjectOf Number) False)
-          , ( "optionalObjectWithShape", PropTypeStatement (Exact
+          , ("optionalUnion", PropTypeStatement (OneOfType [PropTypeStatement String False, PropTypeStatement Number False, PropTypeStatement (InstanceOf "Message") False]) False)
+          , ("optionalArrayOf", PropTypeStatement (ArrayOf (PropTypeStatement Number False)) False)
+          , ("optionalObjectOf", PropTypeStatement (ObjectOf (PropTypeStatement Number False)) False)
+          , ("optionalObjectWithShape", PropTypeStatement (Shape
+            [ ("color", PropTypeStatement String False)
+            , ("fontSize", PropTypeStatement Number False)
+            ]) False)
+          , ("optionalObjectWithStrictShape", PropTypeStatement (Exact
             [ ("name", PropTypeStatement String True)
             , ("quantity", PropTypeStatement Number False)
-            ]))
+            ]) False)
+          , ("requiredFunc", PropTypeStatement Func True)
+          , ("requiredAny", PropTypeStatement Any True)
           ]
       parse propTypeStatementsParser "" testStr `shouldParse` expect

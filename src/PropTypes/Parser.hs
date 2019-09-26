@@ -59,40 +59,73 @@ objectOf parser = do
     pure (pack fieldName, fieldValue)
   pure xs
 
-type PropTypeParser = Parser PropType
+type PropTypeParser = Parser PropTypeStatement
 
 anyP :: PropTypeParser
-anyP = string "any" >> pure Any
+anyP = do
+  string "any"
+  r <- requiredP
+  pure $ PropTypeStatement Any r
 
 boolP :: PropTypeParser
-boolP = string "bool" >> pure Bool
+boolP = do
+  string "bool"
+  r <- requiredP
+  pure $ PropTypeStatement Bool r
 
 numberP :: PropTypeParser
-numberP = string "number" >> pure Number
+numberP = do
+  string "number"
+  r <- requiredP
+  pure $ PropTypeStatement Number r
 
 stringP :: PropTypeParser
-stringP = string "string" >> pure String
+stringP = do
+  string "string"
+  r <- requiredP
+  pure $ PropTypeStatement String r
 
 funcP:: PropTypeParser
-funcP = string "func" >> pure Func
+funcP = do
+  string "func"
+  r <- requiredP
+  pure $ PropTypeStatement Func r
 
 symbolP :: PropTypeParser
-symbolP = string "symbol" >> pure Symbol
+symbolP = do
+  string "symbol"
+  r <- requiredP
+  pure $ PropTypeStatement Symbol r
 
 nodeP :: PropTypeParser
-nodeP = string "node" >> pure Node
+nodeP = do
+  string "node"
+  r <- requiredP
+  pure $ PropTypeStatement Node r
 
 elementP :: PropTypeParser
-elementP = string "element" >> pure Element
+elementP = do
+  string "element"
+  r <- requiredP
+  pure $ PropTypeStatement Element r
 
 elementTypeP :: PropTypeParser
-elementTypeP = string "elementType" >> pure ElementType
+elementTypeP = do
+  string "elementType"
+  r <- requiredP
+  pure $ PropTypeStatement ElementType r
 
 arrayP :: PropTypeParser
-arrayP = string "array" >> pure Array
+arrayP = do
+  string "array"
+  r <- requiredP
+  pure $ PropTypeStatement Array r
 
 objectP :: PropTypeParser
-objectP = string "object" >> pure Object
+objectP = do
+  string "object"
+  r <- requiredP
+  pure $ PropTypeStatement Object r
 
 ofSomething :: Text -> Parser a -> Parser a
 ofSomething keyword parser = do
@@ -101,45 +134,57 @@ ofSomething keyword parser = do
   pure ofWhich
 
 instanceOfP :: PropTypeParser
-instanceOfP = InstanceOf <$> ofSomething "instanceOf" (pack <$> some alphaNumChar)
+instanceOfP = do
+  x <- ofSomething "instanceOf" (pack <$> some alphaNumChar)
+  r <- requiredP
+  pure $ PropTypeStatement (InstanceOf x) r
 
 oneOfP :: PropTypeParser
 oneOfP = do
   string "oneOf"
   array <- parens $ arrayOf $ stringName <|> (lexeme $ some alphaNumChar)
-  pure $ OneOf $ pack <$> array
+  r <- requiredP
+  pure $ PropTypeStatement (OneOf $ pack <$> array) r
 
 oneOfTypeP :: PropTypeParser
 oneOfTypeP = do
   xs <- ofSomething "oneOfType" (arrayOf propTypeParser)
-  pure $ OneOfType $ map (\PropTypeStatement{..} -> _type) xs
+  r <- requiredP
+  pure $ PropTypeStatement (OneOfType xs) r
 
 arrayOfP :: PropTypeParser
 arrayOfP = do
-  PropTypeStatement{..} <- ofSomething "arrayOf" propTypeParser
-  pure $ ArrayOf _type
+  x <- ofSomething "arrayOf" propTypeParser
+  r <- requiredP
+  pure $ PropTypeStatement (ArrayOf x) r
 
 objectOfP :: PropTypeParser
 objectOfP = do
-  PropTypeStatement{..} <- ofSomething "objectOf" propTypeParser
-  pure $ ObjectOf _type
+  x <- ofSomething "objectOf" propTypeParser
+  r <- requiredP
+  pure $ PropTypeStatement (ObjectOf x) r
 
 shapeP :: PropTypeParser
 shapeP = do
   string "shape"
   xs <- parens $ objectOf propTypeParser
-  pure $ Shape $ map (\(name, PropTypeStatement{..}) -> (name, _type)) xs
+  r <- requiredP
+  pure $ PropTypeStatement (Shape xs) r
 
 exactP :: PropTypeParser
 exactP = do
   string "exact"
   xs <- parens $ objectOf propTypeParser
-  pure $ Exact $ map (\(name, PropTypeStatement{..}) -> (name, _type)) xs
+  r <- requiredP
+  pure $ PropTypeStatement (Exact xs) r
 
 notSupportedP :: PropTypeParser
-notSupportedP = pure NotSupported
+notSupportedP = pure $ PropTypeStatement NotSupported False
 
-propTypeParser :: Parser PropTypeStatement
+requiredP :: Parser Bool
+requiredP = (/= Nothing) <$> (optional $ char '.' >> string "isRequired")
+
+propTypeParser :: PropTypeParser
 propTypeParser = do
   optional $ lexeme . try $ string "PropTypes."
   propType <-
@@ -161,8 +206,7 @@ propTypeParser = do
     <|> oneOfP
     <|> shapeP
     <|> exactP
-  isRequired <- optional $ char '.' >> string "isRequired"
-  pure $ PropTypeStatement propType (isRequired /= Nothing)
+  pure propType
 
 propTypeStatementsParser :: Parser [(Text, PropTypeStatement)]
 propTypeStatementsParser = do
