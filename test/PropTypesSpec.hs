@@ -92,8 +92,8 @@ propTypesSpec = describe "PropTypes" $ do
           , ("prop2", PropTypeStatement (OneOf ["First", "Second"]) False)
           ]
       parse propTypeStatementsParser "" testStr `shouldParse` expect
-  context "static prop parser" $ do
-    it "with class" $ do
+  context "statements parser" $ do
+    it "with static property" $ do
       let
         testStr = [r|static propTypes = {
           // Можно объявить проп на соответствие определённому JS-типу.
@@ -187,3 +187,25 @@ propTypesSpec = describe "PropTypes" $ do
           , ("requiredAny", PropTypeStatement Any True)
           ]
       parse propTypeStatementsParser "" testStr `shouldParse` expect
+    it "with function" $ do
+      let
+        testStr = [r|MyComponent.propTypes = {
+          optionalMessage: PropTypes.instanceOf(Message),
+          requiredFunc: PropTypes.func.isRequired,
+          requiredObjectWithShape: PropTypes.shape({
+            color: PropTypes.string.isRequired,
+            fontSize: PropTypes.number
+          }).isRequired,
+        };|]
+        expect =
+          [ ("optionalMessage", PropTypeStatement (InstanceOf "Message") False)
+          , ("requiredFunc", PropTypeStatement Func True)
+          , ("requiredObjectWithShape", PropTypeStatement (
+            Shape
+              [ PropTypeStatement String True
+              , PropTypeStatement Number False
+              ]
+          ) True)
+          ]
+      parse propTypeStatementsParser "" testStr `shoudlParse` expect
+
