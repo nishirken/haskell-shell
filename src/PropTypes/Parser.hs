@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module PropTypes.Parser (propTypeParser, propTypeStatementsParser, objectOf, arrayOf) where
+module PropTypes.Parser (propTypeParser, propTypeStatementsParser, objectOf, arrayOf, lexeme, symbol) where
 
 import Text.Megaparsec
 import Text.Megaparsec.Char

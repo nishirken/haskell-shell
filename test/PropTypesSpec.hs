@@ -12,6 +12,9 @@ import Data.Text (pack)
 import Text.RawString.QQ (r)
 import PropTypes.Statement (PropType (..), PropTypeStatement (..), StaticPropType (..))
 import PropTypes.Parser (propTypeParser, objectOf, propTypeStatementsParser)
+import PropTypes.ComponentParser (componentParser)
+import PropTypes.ComponentStatement (ClassGenerics (..), ComponentStatement (..))
+import TestUtils (testOnFiles)
 
 propTypesSpec :: Spec
 propTypesSpec = describe "PropTypes" $ do
@@ -208,4 +211,21 @@ propTypesSpec = describe "PropTypes" $ do
           ) True)
           ]
       parse propTypeStatementsParser "" testStr `shouldParse` expect
-
+  context "component parser" $ do
+    it "class without props" $
+      parse componentParser "" "class MyComponent extends React.Component {\n" `shouldParse` Class "MyComponent" Nothing
+    it "class with only props" $
+      parse componentParser "" "class MyComponent extends React.PureComponent<any> {\n" `shouldParse` Class "MyComponent" (Just $ ClassGenerics "any" Nothing)
+    it "class with props and state" $
+      parse componentParser "" "class MyComponent extends React.PureComponent<any, any> {\n" `shouldParse` Class "MyComponent" (Just $ ClassGenerics "any" (Just "any"))
+    it "functional without props" $
+      parse componentParser "" "export const MyC = () => {" `shouldParse` Functional "MyC" Nothing
+    it "functional with prop SFC" $
+      parse componentParser "" "export const MyC: React.SFC<any> = () => {" `shouldParse` Functional "MyC" (Just "any")
+    it "functional with prop FunctionalComponent" $
+      parse componentParser "" "export const MyC: React.FunctionalComponent<Props> = () => {" `shouldParse` Functional "MyC" (Just "Props")
+  context "on files" $ do
+    it "class component" $
+      testOnFiles "propTypes/classComponent.tsx" "propTypes/classComponent.expect.tsx" (const $ pure ())
+    it "function component" $
+      testOnFiles "propTypes/functionComponent.tsx" "propTypes/functionComponent.expect.tsx" (const $ pure ())
