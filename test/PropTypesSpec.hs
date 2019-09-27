@@ -219,7 +219,7 @@ propTypesSpec = describe "PropTypes" $ do
     it "class with props and state" $
       parse componentParser "" "class MyComponent extends React.PureComponent<any, any> {\n" `shouldParse` Class "MyComponent" (Just $ ClassGenerics "any" (Just "any"))
     it "functional without props" $
-      parse componentParser "" "export const MyC = () => {" `shouldParse` Functional "MyC" Nothing
+      parse componentParser "" "export const MyC = props => {" `shouldParse` Functional "MyC" Nothing
     it "functional with prop SFC" $
       parse componentParser "" "export const MyC: React.SFC<any> = () => {" `shouldParse` Functional "MyC" (Just "any")
     it "functional with prop FunctionalComponent" $

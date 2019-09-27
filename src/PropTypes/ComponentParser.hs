@@ -23,8 +23,21 @@ classParser = do
     xs <- some alphaNumChar
     notFollowedBy alphaNumChar
     pure xs)
+  skipMany $ alphaNumChar <|> char '.'
   generics <- optional $ between (symbol "<") (symbol ">") genericsParser
   pure $ Class (pack className) generics
 
+functionalParser :: Parser ComponentStatement
+functionalParser = do
+  optional $ lexeme "export"
+  name <- between
+    (lexeme "const")
+    ((skipMany spaceChar) >> symbol ":" <|> (symbol "=" >> lexeme "props"))
+    (some alphaNumChar)
+  props <- optional $ do
+    (lexeme "React.FunctionalComponent") <|> (lexeme "React.SFC") <|> (lexeme "FunctionalComponent") <|> (lexeme "SFC")
+    between (symbol "<") (symbol ">") (some alphaNumChar)
+  pure $ Functional (pack name) (pack <$> props)
+
 componentParser :: Parser ComponentStatement
-componentParser = classParser
+componentParser = classParser <|> functionalParser
