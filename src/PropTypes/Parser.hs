@@ -208,9 +208,22 @@ propTypeParser = do
     <|> exactP
   pure propType
 
-propTypeStatementsParser :: Parser [(Text, PropTypeStatement)]
-propTypeStatementsParser = do
+staticWordParser :: Parser ()
+staticWordParser = do
   lexeme "static"
   lexeme "propTypes"
   symbol "="
+  pure ()
+
+staticPropParser :: Parser ()
+staticPropParser = do
+  some $ alphaNumChar
+  char '.'
+  lexeme "propTypes"
+  symbol "="
+  pure ()
+
+propTypeStatementsParser :: Parser [(Text, PropTypeStatement)]
+propTypeStatementsParser = do
+  staticWordParser <|> staticPropParser
   objectOf propTypeParser

@@ -202,10 +202,10 @@ propTypesSpec = describe "PropTypes" $ do
           , ("requiredFunc", PropTypeStatement Func True)
           , ("requiredObjectWithShape", PropTypeStatement (
             Shape
-              [ PropTypeStatement String True
-              , PropTypeStatement Number False
+              [ ("color", PropTypeStatement String True)
+              , ("fontSize", PropTypeStatement Number False)
               ]
           ) True)
           ]
-      parse propTypeStatementsParser "" testStr `shoudlParse` expect
+      parse propTypeStatementsParser "" testStr `shouldParse` expect
 
