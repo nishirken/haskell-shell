@@ -8,7 +8,7 @@ import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Common (Parser)
 import Data.Text (Text, pack)
-import PropTypes.Statement (PropType (..), PropTypeStatement (..), StaticPropType (..))
+import PropTypes.Statement (PropType (..), PropTypeStatement (..))
 
 sc :: Parser ()
 sc = L.space space1 lineCmnt blockCmnt

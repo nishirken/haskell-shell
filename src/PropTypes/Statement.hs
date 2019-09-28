@@ -28,8 +28,3 @@ data PropTypeStatement = PropTypeStatement
   { _type :: PropType
   , _isRequired :: Bool
   } deriving (Eq, Show)
-
-data StaticPropType = StaticPropType
-  { _originalText :: Text
-  , _statements :: [(Text, PropTypeStatement)]
-  } deriving (Eq, Show)

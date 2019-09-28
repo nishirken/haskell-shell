@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module PropTypes.ComponentParser where
+module PropTypes.ComponentParser (componentParser) where
 
 import PropTypes.ComponentStatement (ClassGenerics (..), ComponentStatement (..))
 import Common (Parser)

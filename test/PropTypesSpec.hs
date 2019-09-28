@@ -10,7 +10,7 @@ import qualified Text.Megaparsec as M
 import qualified Text.Megaparsec.Char as MC
 import Data.Text (pack)
 import Text.RawString.QQ (r)
-import PropTypes.Statement (PropType (..), PropTypeStatement (..), StaticPropType (..))
+import PropTypes.Statement (PropType (..), PropTypeStatement (..))
 import PropTypes.Parser (propTypeParser, objectOf, propTypeStatementsParser)
 import PropTypes.ComponentParser (componentParser)
 import PropTypes.ComponentStatement (ClassGenerics (..), ComponentStatement (..))
