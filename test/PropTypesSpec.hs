@@ -14,6 +14,7 @@ import PropTypes.Statement (PropType (..), PropTypeStatement (..))
 import PropTypes.Parser (propTypeParser, objectOf, propTypeStatementsParser)
 import PropTypes.ComponentParser (componentParser)
 import PropTypes.ComponentStatement (ClassGenerics (..), ComponentStatement (..))
+import PropTypes.Replace (replacePropTypes)
 import TestUtils (testOnFiles)
 
 propTypesSpec :: Spec
@@ -226,6 +227,6 @@ propTypesSpec = describe "PropTypes" $ do
       parse componentParser "" "export const MyC: React.FunctionalComponent<Props> = () => {" `shouldParse` Functional "MyC" (Just "Props")
   context "on files" $ do
     it "class component" $
-      testOnFiles "propTypes/classComponent.tsx" "propTypes/classComponent.expect.tsx" (const $ pure ())
-    it "function component" $
-      testOnFiles "propTypes/functionComponent.tsx" "propTypes/functionComponent.expect.tsx" (const $ pure ())
+      testOnFiles "propTypes/classComponent.tsx" "propTypes/classComponent.expect.tsx" replacePropTypes
+    -- it "function component" $
+    --   testOnFiles "propTypes/functionComponent.tsx" "propTypes/functionComponent.expect.tsx" replace
