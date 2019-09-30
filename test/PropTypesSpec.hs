@@ -41,7 +41,7 @@ propTypesSpec = describe "PropTypes" $ do
     it "instanceOf" $
       parse propTypeParser "" "PropTypes.instanceOf(MyComponent)" `shouldParse` PropTypeStatement (InstanceOf "MyComponent") False
     it "oneOf" $
-      parse propTypeParser "" "PropTypes.oneOf([  'First', \"Second\"  ])" `shouldParse` PropTypeStatement (OneOf ["First", "Second"]) False
+      parse propTypeParser "" "PropTypes.oneOf([  'First', \"Second\"  ])" `shouldParse` PropTypeStatement (OneOf ["'First'", "'Second'"]) False
     it "oneOfType" $
       parse propTypeParser "" "PropTypes.oneOfType([PropTypes.number, PropTypes.string])" `shouldParse` PropTypeStatement (OneOfType [PropTypeStatement Number False, PropTypeStatement String False]) False
     it "arrayOf" $

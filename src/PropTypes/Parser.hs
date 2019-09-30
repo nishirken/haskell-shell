@@ -226,4 +226,7 @@ staticPropParser = do
 propTypeStatementsParser :: Parser [(Text, PropTypeStatement)]
 propTypeStatementsParser = do
   staticWordParser <|> staticPropParser
-  objectOf propTypeParser
+  xs <- objectOf propTypeParser
+  optional $ char ';' 
+  optional newline
+  pure xs

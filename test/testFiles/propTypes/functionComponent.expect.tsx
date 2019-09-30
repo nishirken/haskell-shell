@@ -1,6 +1,5 @@
 import React from 'react';
 
-
 interface MyComponentProps {
   optionalString?: string;
   requiredNumber: number;
