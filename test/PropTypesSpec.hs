@@ -228,5 +228,5 @@ propTypesSpec = describe "PropTypes" $ do
   context "on files" $ do
     it "class component" $
       testOnFiles "propTypes/classComponent.tsx" "propTypes/classComponent.expect.tsx" replacePropTypes
-    -- it "function component" $
-    --   testOnFiles "propTypes/functionComponent.tsx" "propTypes/functionComponent.expect.tsx" replace
+    it "function component" $
+      testOnFiles "propTypes/functionComponent.tsx" "propTypes/functionComponent.expect.tsx" replacePropTypes

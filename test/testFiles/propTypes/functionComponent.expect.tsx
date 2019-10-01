@@ -1,11 +1,11 @@
 import React from 'react';
 
-interface MyComponentProps {
+export interface MyComponentProps {
   optionalString?: string;
   requiredNumber: number;
 }
 
-export const MyComponent: React.FunctionComponent<MyComponentProps> = () => (
+export const MyComponent: React.FunctionalComponent<MyComponentProps> = props => (
   <div></div>
 );
 

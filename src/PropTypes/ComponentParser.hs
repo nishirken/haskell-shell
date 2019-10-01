@@ -26,14 +26,15 @@ classParser = do
   skipMany $ alphaNumChar <|> char '.'
   generics <- optional $ between (symbol "<") (symbol ">") genericsParser
   pure $ Class (pack className) generics
-
+-- TODO: handle all cases
 functionalParser :: Parser ComponentStatement
 functionalParser = do
   optional $ lexeme "export"
-  name <- between
-    (lexeme "const")
-    ((skipMany spaceChar) >> symbol ":" <|> (symbol "=" >> lexeme "props"))
-    (some alphaNumChar)
+  lexeme "const"
+  skipMany space1
+  name <- some alphaNumChar
+  skipMany space1
+  symbol ":" <|> (symbol "=" >> lexeme "props =>")
   props <- optional $ do
     (lexeme "React.FunctionalComponent") <|> (lexeme "React.SFC") <|> (lexeme "FunctionalComponent") <|> (lexeme "SFC")
     between (symbol "<") (symbol ">") (some alphaNumChar)

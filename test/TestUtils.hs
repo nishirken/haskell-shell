@@ -11,6 +11,7 @@ import System.Posix.Files (getFileStatus)
 import Data.Text (Text, pack, unpack, isSuffixOf)
 import Data.Maybe (fromJust)
 import Control.Monad (forM)
+import Control.Exception
 
 baseTestFilesPath :: FilePath
 baseTestFilesPath = "./test/testFiles/"
@@ -21,7 +22,13 @@ testOnFiles testFile expectFile f = do
   let expectPath = baseTestFilesPath </> expectFile
   initialContent <- StrictIO.readFile $ testPath
   expectContent <- StrictIO.readFile $ expectPath
-  f $ Turtle.fromString testPath
+  result <- try $ f $ Turtle.fromString testPath :: IO (Either ErrorCall ())
   replacedContent <- StrictIO.readFile testPath
-  writeFile testPath initialContent
-  replacedContent `shouldBe` expectContent
+  case result of
+    (Left e) -> do
+      print e
+      writeFile testPath initialContent
+      replacedContent `shouldBe` expectContent
+    (Right _) -> do
+      writeFile testPath initialContent
+      replacedContent `shouldBe` expectContent

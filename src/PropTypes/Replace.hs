@@ -4,7 +4,7 @@
 module PropTypes.Replace (replacePropTypes) where
 
 import qualified Turtle as T
-import Data.Text (Text, pack, replace, unpack, lines, isPrefixOf, unlines)
+import Data.Text (Text, pack, replace, unpack, lines, isPrefixOf, unlines, splitOn)
 import PropTypes.ComponentStatement (ClassGenerics (..), ComponentStatement (..))
 import PropTypes.ComponentParser (componentParser)
 import PropTypes.Statement (PropTypeStatement (..), PropType (..))
@@ -26,8 +26,10 @@ newComponentLine (originalLine, Class{..}) = case _generics of
   (Just ClassGenerics{..}) -> replace _props (newPropsName _name _props) originalLine
   Nothing -> originalLine <> "<" <> (newPropsName _name "any") <> ">"
 newComponentLine (originalLine, Functional{..}) = case _generic of
-  (Just x) -> replace x (newPropsName _name x) originalLine
-  Nothing -> originalLine <> "<" <> (newPropsName _name "any") <> ">"
+  (Just propsName) -> replace propsName (newPropsName _name propsName) originalLine
+  Nothing -> "export const " <> _name <> ": React.FunctionalComponent<" <> (newPropsName _name "any") <> ">" <> rest
+    where
+      rest = last $ splitOn _name originalLine
 
 replaceOldLine :: (Text, ComponentStatement) -> Text -> Text
 replaceOldLine parserResult = replace oldLine newLine
@@ -67,7 +69,7 @@ writeNewContent path oldContent = do
         propTypes = [x | (Right x) <- propTypesResult] !! 0
         componentLine = [x | (Right x) <- componentLineResult] !! 0
         className Class{..} = _name
-        classname Functional{..} = _name
+        className Functional{..} = _name
       pure
         $ dropPropTypes propTypes
         $ replaceOldLine componentLine

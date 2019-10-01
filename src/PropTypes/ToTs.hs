@@ -15,14 +15,14 @@ toTsInterface propsName xs =
 objectTransform :: Int -> [(T.Text, PropTypeStatement)] -> T.Text
 objectTransform indent xs = "{\n" <> T.unlines fields <> fold (replicate indent' " ") <>"}"
   where
-    indent' = round $ (realToFrac indent) / 2
+    indent' = let x = round $ (realToFrac indent) / 2 in if x == 1 then 0 else x
     fields :: [T.Text]
     fields = map fieldTransform xs
     fieldTransform :: (T.Text, PropTypeStatement) -> T.Text
     fieldTransform (fieldName, PropTypeStatement{..}) =
       fold (replicate indent " ")
       <> fieldName
-      <> if _isRequired then ": " else "?: "
+      <> (if _isRequired then ": " else "?: ")
       <> typeTransform indent _type
       <> ";"
 
