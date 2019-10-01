@@ -68,7 +68,7 @@ propTypesSpec = describe "PropTypes" $ do
         expect = PropTypeStatement (Exact
           [ ("field1", PropTypeStatement Any True)
           , ("field2", PropTypeStatement (ArrayOf (PropTypeStatement String False)) False)
-          , ("field3", PropTypeStatement (Shape [("field1", PropTypeStatement Number False), ("field2", PropTypeStatement (OneOf ["First", "Second"]) False)]) False)
+          , ("field3", PropTypeStatement (Shape [("field1", PropTypeStatement Number False), ("field2", PropTypeStatement (OneOf ["'First'", "'Second'"]) False)]) False)
           ]) False
       parse propTypeParser "" testStr `shouldParse` expect
   context "statement parser" $ do
@@ -92,8 +92,8 @@ propTypesSpec = describe "PropTypes" $ do
         };|]
         expect =
           [ ("prop1", PropTypeStatement
-            (Shape [("field1", PropTypeStatement Number False), ("field2", PropTypeStatement (OneOf ["First", "Second"]) False)]) True)
-          , ("prop2", PropTypeStatement (OneOf ["First", "Second"]) False)
+            (Shape [("field1", PropTypeStatement Number False), ("field2", PropTypeStatement (OneOf ["'First'", "'Second'"]) False)]) True)
+          , ("prop2", PropTypeStatement (OneOf ["'First'", "'Second'"]) False)
           ]
       parse propTypeStatementsParser "" testStr `shouldParse` expect
   context "statements parser" $ do
@@ -175,7 +175,7 @@ propTypesSpec = describe "PropTypes" $ do
           , ("optionalElement", PropTypeStatement Element False)
           , ("optionalElementType", PropTypeStatement ElementType False)
           , ("optionalMessage", PropTypeStatement (InstanceOf "Message") False)
-          , ("optionalEnum", PropTypeStatement (OneOf ["News", "Photos"]) False)
+          , ("optionalEnum", PropTypeStatement (OneOf ["'News'", "'Photos'"]) False)
           , ("optionalUnion", PropTypeStatement (OneOfType [PropTypeStatement String False, PropTypeStatement Number False, PropTypeStatement (InstanceOf "Message") False]) False)
           , ("optionalArrayOf", PropTypeStatement (ArrayOf (PropTypeStatement Number False)) False)
           , ("optionalObjectOf", PropTypeStatement (ObjectOf (PropTypeStatement Number False)) False)

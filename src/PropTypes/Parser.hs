@@ -38,8 +38,9 @@ squareBrackets :: Parser a -> Parser a
 squareBrackets = between (symbol "[") (symbol "]")
 
 stringName :: Parser String
-stringName =
-  (between (symbol "'") (symbol "'") $ many alphaNumChar) <|> (between (symbol "\"") (symbol "\"") $ many alphaNumChar)
+stringName = do
+  x <- (between (symbol "'") (symbol "'") $ many alphaNumChar) <|> (between (symbol "\"") (symbol "\"") $ many alphaNumChar)
+  pure $ "'" <> x <> "'"
 
 arrayOf :: Parser a -> Parser [a]
 arrayOf parser = do

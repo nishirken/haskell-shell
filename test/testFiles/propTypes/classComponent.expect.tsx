@@ -1,15 +1,6 @@
 import React from 'react';
 import State from './State';
 
-export class ClassComponent extends React.Component<ClassComponentProps> {
-  
-  private readonly state: State = new State();
-
-  render() {
-    return null;
-  }
-}
-
 export interface ClassComponentProps {
   optionalArray?: any[];
   optionalBool?: boolean;
@@ -36,4 +27,13 @@ export interface ClassComponentProps {
   };
   requiredFunc: (...any[]) => any;
   requiredAny: any;
+}
+
+export class ClassComponent extends React.Component<ClassComponentProps> {
+  
+  private readonly state: State = new State();
+
+  render() {
+    return null;
+  }
 }

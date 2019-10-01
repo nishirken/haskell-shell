@@ -13,6 +13,7 @@ import PropTypes.ToTs (toTsInterface)
 import qualified System.IO.Strict as StrictIO
 import Text.Megaparsec (parse)
 import Replace.Megaparsec (findAllCap)
+import Data.Maybe (fromMaybe)
 import Data.Either (isRight)
 import Control.Monad (forM_)
 
@@ -41,8 +42,16 @@ dropPropTypesImport :: Text -> Text
 dropPropTypesImport = replace "import PropTypes from 'prop-types';\n" ""
 
 insertPropsInterface :: Text -> [(Text, PropTypeStatement)] -> Text -> Text
-insertPropsInterface className propTypes content = content <> tsInterface
+insertPropsInterface className propTypes content =
+  (Data.Text.unlines before)
+  <> tsInterface
+  <> (Data.Text.unlines after)
   where
+    xs = Data.Text.lines content
+    imports = filter (isPrefixOf "import") xs
+    lastImport = if length imports == 0 then "" else last imports
+    before = takeWhile (\x -> not $ isPrefixOf lastImport x) xs <> [lastImport]
+    after = drop 1 $ dropWhile (\x -> not $ isPrefixOf lastImport x) xs
     tsInterface = "\n" <> toTsInterface (newPropsName className "any") propTypes <> "\n"
 
 writeNewContent :: T.FilePath -> String -> IO ()

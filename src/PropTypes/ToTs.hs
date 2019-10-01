@@ -6,14 +6,16 @@ module PropTypes.ToTs (toTsInterface) where
 import PropTypes.Statement (PropType (..), PropTypeStatement (..))
 import qualified Data.Text as T
 import Data.Foldable (fold)
+import Data.List (intercalate)
 
 toTsInterface :: T.Text -> [(T.Text, PropTypeStatement)] -> T.Text
 toTsInterface propsName xs =
   "export interface " <> propsName <> " " <> objectTransform 2 xs
 
 objectTransform :: Int -> [(T.Text, PropTypeStatement)] -> T.Text
-objectTransform indent xs = "{\n" <> T.unlines fields <> "}"
+objectTransform indent xs = "{\n" <> T.unlines fields <> fold (replicate indent' " ") <>"}"
   where
+    indent' = round $ (realToFrac indent) / 2
     fields :: [T.Text]
     fields = map fieldTransform xs
     fieldTransform :: (T.Text, PropTypeStatement) -> T.Text
@@ -37,9 +39,10 @@ typeTransform _ Node = "React.ReactNode"
 typeTransform _ Element = "React.ReactElement<any>"
 typeTransform _ ElementType = "React.ComponentType<any>"
 typeTransform _ (InstanceOf className) = className
-typeTransform _ (OneOf xs) = foldr (\acc x -> acc <> " | " <> ("'" <> x <> "'")) "" xs
-typeTransform indent (OneOfType xs) =
-  foldr (\PropTypeStatement {..} acc -> acc <> " | " <> typeTransform indent _type) "" xs
+typeTransform _ (OneOf xs) = T.pack $ intercalate " | " $ map T.unpack xs
+typeTransform indent (OneOfType xs) = T.pack $ intercalate " | " $ map (T.unpack . transform) xs
+  where
+    transform PropTypeStatement {..} = typeTransform indent _type
 typeTransform indent (ArrayOf PropTypeStatement{..}) = typeTransform indent _type <> "[]"
 typeTransform indent (ObjectOf PropTypeStatement{..}) = "Record<string | number," <> " " <> typeTransform indent _type <> ">"
 typeTransform indent (Shape statements) = objectTransform (indent + indent) statements
