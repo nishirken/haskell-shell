@@ -19,6 +19,7 @@ import InplacePatterns (
   , replaceExtendObservable
   , addTslintDisabled
   )
+import PropTypes.Replace (replacePropTypes)
 import Control.Monad (forM_)
 import Data.Foldable (traverse_)
 
@@ -27,4 +28,4 @@ startRefactor = do
   projectPath <- getProjectPath
   Turtle.cd projectPath
   tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  forM_ tsPaths convertToAbsolute
+  forM_ tsPaths replacePropTypes

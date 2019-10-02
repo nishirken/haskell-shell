@@ -1,10 +1,13 @@
 import React from 'react';
 import State from './State';
+import {
+  styles
+} from './styles';
 
 export interface ClassComponentProps {
   optionalArray?: any[];
   optionalBool?: boolean;
-  optionalFunc?: (...any[]) => any;
+  optionalFunc?: (...xs: any[]) => any;
   optionalNumber?: number;
   optionalObject?: object;
   optionalString?: string;
@@ -25,11 +28,13 @@ export interface ClassComponentProps {
     name: string;
     quantity?: number;
   };
-  requiredFunc: (...any[]) => any;
+  requiredFunc: (...xs: any[]) => any;
   requiredAny: any;
 }
 
 export class ClassComponent extends React.Component<ClassComponentProps> {
+  field1: any;
+  field2: string = '';
   
   private readonly state: State = new State();
 

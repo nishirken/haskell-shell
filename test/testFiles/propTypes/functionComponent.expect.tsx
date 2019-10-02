@@ -1,4 +1,7 @@
 import React from 'react';
+import {
+  styles
+} from './styles';
 
 export interface MyComponentProps {
   optionalString?: string;

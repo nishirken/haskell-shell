@@ -28,7 +28,7 @@ objectTransform indent xs = "{\n" <> T.unlines fields <> fold (replicate indent'
 
 typeTransform :: Int -> PropType -> T.Text
 typeTransform _ Any = "any"
-typeTransform _ Func = "(...any[]) => any"
+typeTransform _ Func = "(...xs: any[]) => any"
 typeTransform _ Array = "any[]"
 typeTransform _ Bool = "boolean"
 typeTransform _ Number = "number"

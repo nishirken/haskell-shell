@@ -1,8 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import State from './State';
+import {
+  styles
+} from './styles';
 
 export class ClassComponent extends React.Component {
+  field1: any;
+  field2: string = '';
+
   static propTypes = {
     // Можно объявить проп на соответствие определённому JS-типу.
     // По умолчанию это не обязательно.
