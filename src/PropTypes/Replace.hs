@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module PropTypes.Replace (replacePropTypes) where
+module PropTypes.Replace (replacePropTypes, importParser) where
 
 import qualified Turtle as T
 import Data.Text (Text, pack, replace, unpack, lines, isPrefixOf, unlines, splitOn)
@@ -14,20 +14,18 @@ import qualified System.IO.Strict as StrictIO
 import Text.Megaparsec (parse)
 import qualified Text.Megaparsec as M
 import qualified Text.Megaparsec.Char as MC
-import Replace.Megaparsec (findAllCap)
+import Replace.Megaparsec (findAllCap, findAll)
 import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Either (isRight, rights)
 import Control.Monad (forM_)
 import Common (Parser)
-
-importParser :: Parser Text
-importParser = pack <$> M.between (lexeme "import") (symbol ";") (M.some $ MC.printChar M.<|> MC.newline)
+import ReplaceDefaultImports.Statement (importParser)
 
 -- need to choose priority if the component has props interface and propTypes at the same time
 newPropsName :: Text -> Text -> Text
 newPropsName componentName propsName = if propsName == "any" then componentName <> "Props" else propsName
 
-newComponentLine :: (Text, ComponentStatement) -> Text 
+newComponentLine :: (Text, ComponentStatement) -> Text
 newComponentLine (originalLine, Class{..}) = case _generics of
   (Just ClassGenerics{..}) -> replace _props (newPropsName _name _props) originalLine
   Nothing -> originalLine <> "<" <> (newPropsName _name "any") <> ">"
@@ -49,18 +47,17 @@ dropPropTypes parserResult = replace (fst parserResult) ""
 dropPropTypesImport :: Text -> Text
 dropPropTypesImport = replace "import PropTypes from 'prop-types';\n" ""
 -- TODO fix insert after imports
-insertPropsInterface :: Text -> [(Text, Text)] -> [(Text, PropTypeStatement)] -> Text -> Text
+insertPropsInterface :: Text -> [Text] -> [(Text, PropTypeStatement)] -> Text -> Text
 insertPropsInterface className imports propTypes content =
-  (Data.Text.unlines before)
+  before
   <> tsInterface
-  <> (Data.Text.unlines after)
+  <> after
   where
-    xs = Data.Text.lines content
-    imports = filter (isPrefixOf "import") xs
     lastImport = if length imports == 0 then "" else last imports
-    before = takeWhile (\x -> not $ isPrefixOf lastImport x) xs <> [lastImport]
-    after = drop 1 $ dropWhile (\x -> not $ isPrefixOf lastImport x) xs
-    tsInterface = "\n" <> toTsInterface (newPropsName className "any") propTypes <> "\n"
+    splitted = if lastImport == "" then [content] else splitOn lastImport content
+    before = head splitted <> lastImport <> "\n"
+    after = last splitted
+    tsInterface = "\n" <> toTsInterface (newPropsName className "any") propTypes
 -- TODO refactor
 writeNewContent :: T.FilePath -> String -> IO ()
 writeNewContent path oldContent = do
@@ -72,6 +69,7 @@ writeNewContent path oldContent = do
     newContent = do
       componentLine <- extractFirst <$> parseWithCapture componentParser
       propTypes <- extractFirst <$> parseWithCapture propTypeStatementsParser
+      imports <- rights <$> parse (findAll importParser) strPath textContent
       let
         className Class{..} = _name
         className Functional{..} = _name
@@ -81,7 +79,7 @@ writeNewContent path oldContent = do
             $ dropPropTypes y
             $ replaceOldLine x
             $ dropPropTypesImport
-            $ insertPropsInterface (className $ snd x) (snd y) textContent
+            $ insertPropsInterface (className $ snd x) imports (snd y) textContent
           Nothing -> Right ""
         Nothing -> Right ""
   case newContent of

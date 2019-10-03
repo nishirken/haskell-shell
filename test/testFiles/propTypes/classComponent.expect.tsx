@@ -35,6 +35,7 @@ export interface ClassComponentProps {
 export class ClassComponent extends React.Component<ClassComponentProps> {
   field1: any;
   field2: string = '';
+
   
   private readonly state: State = new State();
 
