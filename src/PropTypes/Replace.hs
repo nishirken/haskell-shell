@@ -21,14 +21,19 @@ import Control.Monad (forM_)
 import Common (Parser)
 import ReplaceDefaultImports.Statement (importParser)
 
--- need to choose priority if the component has props interface and propTypes at the same time
 newPropsName :: Text -> Text -> Text
 newPropsName componentName propsName = if propsName == "any" then componentName <> "Props" else propsName
 
 newComponentLine :: (Text, ComponentStatement) -> Text
 newComponentLine (originalLine, Class{..}) = case _generics of
-  (Just ClassGenerics{..}) -> replace _props (newPropsName _name _props) originalLine
-  Nothing -> originalLine <> "<" <> (newPropsName _name "any") <> ">"
+  (Just ClassGenerics{..}) ->
+    let
+      newName = newPropsName _name _props
+      propsReplace = replace _props newName originalLine in
+    case _state of
+      (Just s) -> replace (newName <> ">") (s <> ">") propsReplace
+      Nothing -> propsReplace
+  Nothing -> originalLine <> "<" <> newPropsName _name "any" <> ">"
 newComponentLine (originalLine, Functional{..}) = case _generic of
   (Just propsName) -> replace propsName (newPropsName _name propsName) originalLine
   Nothing -> "export const " <> _name <> ": React.FunctionalComponent<" <> (newPropsName _name "any") <> ">" <> rest
@@ -46,7 +51,7 @@ dropPropTypes parserResult = replace (fst parserResult) ""
 -- TODO context types???
 dropPropTypesImport :: Text -> Text
 dropPropTypesImport = replace "import PropTypes from 'prop-types';\n" ""
--- TODO fix insert after imports
+
 insertPropsInterface :: Text -> [Text] -> [(Text, PropTypeStatement)] -> Text -> Text
 insertPropsInterface className imports propTypes content =
   before
@@ -58,7 +63,7 @@ insertPropsInterface className imports propTypes content =
     before = head splitted <> lastImport <> "\n"
     after = last splitted
     tsInterface = "\n" <> toTsInterface (newPropsName className "any") propTypes
--- TODO refactor
+
 writeNewContent :: T.FilePath -> String -> IO ()
 writeNewContent path oldContent = do
   let

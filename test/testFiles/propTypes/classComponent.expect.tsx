@@ -32,7 +32,7 @@ export interface ClassComponentProps {
   requiredAny: any;
 }
 
-export class ClassComponent extends React.Component<ClassComponentProps> {
+export class ClassComponent extends React.Component<ClassComponentProps, any> {
   field1: any;
   field2: string = '';
 

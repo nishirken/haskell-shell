@@ -5,7 +5,7 @@ import {
   styles
 } from './styles';
 
-export class ClassComponent extends React.Component {
+export class ClassComponent extends React.Component<any, any> {
   field1: any;
   field2: string = '';
 
