@@ -25,7 +25,6 @@ import Data.Foldable (traverse_)
 
 startRefactor :: IO ()
 startRefactor = do
-  projectPath <- getProjectPath
-  Turtle.cd projectPath
-  tsPaths <- makeAbsolute projectPath <$> findTsPaths
-  forM_ tsPaths replacePropTypes
+  currentPath <- Turtle.pwd
+  tsPaths <- makeAbsolute currentPath <$> findTsPaths
+  forM_ tsPaths convertToAbsolute
