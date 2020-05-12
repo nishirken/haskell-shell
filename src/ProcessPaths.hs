@@ -47,4 +47,4 @@ inPathsFile path =
 getProjectPath :: IO FilePath
 getProjectPath = do
   homeDir <- getHomeDirectory
-  pure $ decodeString homeDir </> "Projects/MonopolyOnline.Frontend/frontend/src"
+  pure $ decodeString homeDir </> "Projects/calendarx/src"
