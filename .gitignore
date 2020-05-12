@@ -1,5 +1,4 @@
 .stack-work/
-haskell-shell.cabal
 *~
 .idea/
 /.DS_Store

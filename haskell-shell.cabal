@@ -1,0 +1,129 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 905db54b49d5969f44a08e3502276c2152467b491120ead3d3fab58dc72c1449
+
+name:           haskell-shell
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/haskell-shell#readme>
+homepage:       https://github.com/githubuser/haskell-shell#readme
+bug-reports:    https://github.com/githubuser/haskell-shell/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2019 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/haskell-shell
+
+library
+  exposed-modules:
+      Common
+      ConvertImports
+      ExportSingletons
+      ExtendObservable
+      InplacePatterns
+      Lib
+      ProcessPaths
+      PropTypes.ComponentParser
+      PropTypes.ComponentStatement
+      PropTypes.Parser
+      PropTypes.Replace
+      PropTypes.Statement
+      PropTypes.ToTs
+      RenameFile
+      ReplaceDefaultImports.Common
+      ReplaceDefaultImports.ExportDefinition
+      ReplaceDefaultImports.ImportDefinition
+      ReplaceDefaultImports.Replace
+      ReplaceDefaultImports.Statement
+  other-modules:
+      Paths_haskell_shell
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , directory
+    , filepath
+    , hspec-megaparsec
+    , megaparsec
+    , process
+    , raw-strings-qq
+    , replace-megaparsec
+    , strict
+    , text
+    , turtle
+    , unix
+  default-language: Haskell2010
+
+executable haskell-shell-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_haskell_shell
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , directory
+    , filepath
+    , haskell-shell
+    , hspec-megaparsec
+    , megaparsec
+    , process
+    , raw-strings-qq
+    , replace-megaparsec
+    , strict
+    , text
+    , turtle
+    , unix
+  default-language: Haskell2010
+
+test-suite haskell-shell-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      ConvertImportsSpec
+      ExportSingletonsSpec
+      ExtendObservableSpec
+      InplacePatternsSpec
+      ProcessPathsSpec
+      PropTypesSpec
+      ReplaceDefaultImportsSpec.ExportDefinitionSpec
+      ReplaceDefaultImportsSpec.ImportDefinitionSpec
+      ReplaceDefaultImportsSpec.ReplaceSpec
+      ReplaceDefaultImportsSpec.ResolveImportsSpec
+      ReplaceDefaultImportsSpec.StatementSpec
+      TestUtils
+      Paths_haskell_shell
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , directory
+    , filepath
+    , haskell-shell
+    , hspec
+    , hspec-megaparsec
+    , megaparsec
+    , process
+    , raw-strings-qq
+    , replace-megaparsec
+    , strict
+    , text
+    , turtle
+    , unix
+  default-language: Haskell2010
